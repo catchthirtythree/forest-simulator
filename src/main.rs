@@ -110,12 +110,14 @@ impl Display for Forest {
     fn fmt(&self, f: &mut Formatter) -> Result {
         for (idx, cell) in self.grid.iter().enumerate() {
             if let Err(e) = write!(f, "{} ", cell.to_string()) {
-                panic!("{}", e)
+                return Err(e);
             }
 
-            if (idx + 1) != self.grid.len() && (idx + 1) % self.size == 0 {
+            let is_last_cell = (idx + 1) != self.grid.len();
+            let is_end_of_line = (idx + 1) % self.size == 0;
+            if is_last_cell && is_end_of_line {
                 if let Err(e) = writeln!(f, "{}", "") {
-                    panic!("{}", e)
+                    return Err(e);
                 }
             }
         }
