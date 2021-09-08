@@ -91,14 +91,17 @@
 ///
 
 use rand::Rng;
-use std::fmt::{Display, Formatter, Result};
+use std::fmt;
 
 struct Forest {
     size: usize,
-    grid: Vec<u32>
+    grid: Vec<u32>,
+    months_elapsed: u32,
 }
 
 impl Forest {
+    const TOTAL_MONTHS: u32 = 4800;
+
     const EMPTY: u32 = 0;
     const BEAR: u32 = 1;
     const LUMBERJACK: u32 = 2;
@@ -144,12 +147,20 @@ impl Forest {
             place_entity(&mut grid, Forest::BEAR);
         }
 
-        Forest { size, grid }
+        Forest { size, grid, months_elapsed: 0 }
+    }
+
+    fn is_finished(&self) -> bool {
+        self.months_elapsed == Forest::TOTAL_MONTHS
+    }
+
+    fn update(&mut self) {
+        self.months_elapsed += 1;
     }
 }
 
-impl Display for Forest {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+impl fmt::Display for Forest {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for (idx, cell) in self.grid.iter().enumerate() {
             let symbol = match *cell {
                 Forest::EMPTY      => ".",
@@ -179,7 +190,11 @@ impl Display for Forest {
 }
 
 fn main() {
-    let forest = Forest::new(10);
+    let mut forest = Forest::new(10);
+
+    while !forest.is_finished() {
+        forest.update();
+    }
 
     println!("{}", forest);
 }
