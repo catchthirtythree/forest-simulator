@@ -90,6 +90,7 @@
 /// hard about how everything will work.
 ///
 
+use rand::Rng;
 use std::fmt::{Display, Formatter, Result};
 
 struct Forest {
@@ -98,18 +99,69 @@ struct Forest {
 }
 
 impl Forest {
+    const EMPTY: u32 = 0;
+    const BEAR: u32 = 1;
+    const LUMBERJACK: u32 = 2;
+    const SAPLING: u32 = 3;
+    const TREE: u32 = 4;
+    const ELDER_TREE: u32 = 5;
+
     fn new(size: usize) -> Self {
-        Forest {
-            size,
-            grid: vec![0; size * size],
+        // Calculate the grid size
+        let grid_size = size * size;
+
+        // Create the empty grid that represents the forest
+        let mut grid = vec![Forest::EMPTY; grid_size];
+
+        // Create a closure for randomly placing entities
+        fn place_entity(grid: &mut Vec<u32>, entity: u32) {
+            let mut rng = rand::thread_rng();
+
+            loop {
+                let idx = rng.gen_range(0..grid.len());
+                if grid[idx] == Forest::EMPTY {
+                    grid[idx] = entity;
+                    break;
+                }
+            }
         }
+
+        // Calculate the initial number of trees and place them on the grid
+        let num_trees = (grid_size as f32 * 0.50) as usize;
+        for _ in 0..num_trees {
+            place_entity(&mut grid, Forest::TREE);
+        }
+
+        // Calculate the initial number of lumberjacks and place them on the grid
+        let num_lumberjacks = (grid_size as f32 * 0.10) as usize;
+        for _ in 0..num_lumberjacks {
+            place_entity(&mut grid, Forest::LUMBERJACK);
+        }
+
+        // Calculate the initial number of bears and place them on the grid
+        let num_bears = (grid_size as f32 * 0.02) as usize;
+        for _ in 0..num_bears {
+            place_entity(&mut grid, Forest::BEAR);
+        }
+
+        Forest { size, grid }
     }
 }
 
 impl Display for Forest {
     fn fmt(&self, f: &mut Formatter) -> Result {
         for (idx, cell) in self.grid.iter().enumerate() {
-            if let Err(e) = write!(f, "{} ", cell.to_string()) {
+            let symbol = match *cell {
+                Forest::EMPTY      => ".",
+                Forest::BEAR       => "B",
+                Forest::LUMBERJACK => "L",
+                Forest::SAPLING    => "s",
+                Forest::TREE       => "T",
+                Forest::ELDER_TREE => "@",
+                _                  => panic!("The entity could not be found.")
+            };
+
+            if let Err(e) = write!(f, "{} ", symbol) {
                 return Err(e);
             }
 
