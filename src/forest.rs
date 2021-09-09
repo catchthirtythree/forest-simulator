@@ -16,44 +16,53 @@ impl Forest {
     const ELDER_TREE: u32 = 5;
 
     pub fn new(size: usize) -> Self {
+        let grid = Forest::create_grid(size);
+
+        Forest {
+            size,
+            grid,
+            months_elapsed: 0
+        }
+    }
+
+    fn create_grid(size: usize) -> Vec<u32> {
         // Calculate the grid size
         let grid_size = size * size;
 
         // Create the empty grid that represents the forest
         let mut grid = vec![Forest::EMPTY; grid_size];
 
-        // Create a closure for randomly placing entities
-        fn place_entity(grid: &mut Vec<u32>, entity: u32) {
-            let mut rng = rand::thread_rng();
-
-            loop {
-                let idx = rng.gen_range(0..grid.len());
-                if grid[idx] == Forest::EMPTY {
-                    grid[idx] = entity;
-                    break;
-                }
-            }
-        }
-
         // Calculate the initial number of trees and place them on the grid
         let num_trees = (grid_size as f32 * 0.50) as usize;
         for _ in 0..num_trees {
-            place_entity(&mut grid, Forest::TREE);
+            Forest::place_entity(&mut grid, Forest::TREE);
         }
 
         // Calculate the initial number of lumberjacks and place them on the grid
         let num_lumberjacks = (grid_size as f32 * 0.10) as usize;
         for _ in 0..num_lumberjacks {
-            place_entity(&mut grid, Forest::LUMBERJACK);
+            Forest::place_entity(&mut grid, Forest::LUMBERJACK);
         }
 
         // Calculate the initial number of bears and place them on the grid
         let num_bears = (grid_size as f32 * 0.02) as usize;
         for _ in 0..num_bears {
-            place_entity(&mut grid, Forest::BEAR);
+            Forest::place_entity(&mut grid, Forest::BEAR);
         }
 
-        Forest { size, grid, months_elapsed: 0 }
+        grid
+    }
+
+    fn place_entity(grid: &mut Vec<u32>, entity: u32) {
+        let mut rng = rand::thread_rng();
+
+        loop {
+            let idx = rng.gen_range(0..grid.len());
+            if grid[idx] == Forest::EMPTY {
+                grid[idx] = entity;
+                break;
+            }
+        }
     }
 
     pub fn update(&mut self) {
