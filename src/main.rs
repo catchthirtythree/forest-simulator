@@ -100,8 +100,6 @@ struct Forest {
 }
 
 impl Forest {
-    const TOTAL_MONTHS: u32 = 4800;
-
     const EMPTY: u32 = 0;
     const BEAR: u32 = 1;
     const LUMBERJACK: u32 = 2;
@@ -150,10 +148,6 @@ impl Forest {
         Forest { size, grid, months_elapsed: 0 }
     }
 
-    fn is_finished(&self) -> bool {
-        self.months_elapsed == Forest::TOTAL_MONTHS
-    }
-
     fn update(&mut self) {
         self.months_elapsed += 1;
     }
@@ -190,9 +184,11 @@ impl fmt::Display for Forest {
 }
 
 fn main() {
+    const TOTAL_MONTHS: u32 = 4800;
+
     let mut forest = Forest::new(10);
 
-    while !forest.is_finished() {
+    while forest.months_elapsed != TOTAL_MONTHS {
         forest.update();
     }
 
