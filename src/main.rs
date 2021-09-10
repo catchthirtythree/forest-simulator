@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 /// Forest Simulation
 ///
 /// The simulation revolves around a forest.
@@ -90,7 +93,9 @@
 /// hard about how everything will work.
 ///
 
+mod entities;
 mod forest;
+mod grid;
 
 use crate::forest::Forest;
 
