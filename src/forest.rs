@@ -131,9 +131,9 @@ impl fmt::Display for Forest {
             //     Some(_)                  => panic!("The entity could not be found."),
             // };
 
-            let symbol = match *cell {
+            let symbol = match cell {
                 None    => ".",
-                Some(_) => "?"
+                Some(e) => e.get_symbol()
             };
 
             if let Err(e) = write!(f, "{} ", symbol) {

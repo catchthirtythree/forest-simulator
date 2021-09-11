@@ -1,5 +1,4 @@
-use crate::entities::entity::{Entity, EntityType};
-use crate::forest::Forest;
+use crate::entities::entity::Entity;
 use crate::grid::Grid;
 
 use rand::Rng;
@@ -29,7 +28,7 @@ impl Tree {
     pub fn new(kind: TreeKind) -> Self {
         Self {
             age: 0,
-            kind
+            kind,
         }
     }
 
@@ -53,7 +52,7 @@ impl Tree {
 
     // @TODO Instead of passing a mutable grid, perhaps we should return an
     // Option for the Forest to place itself.
-    fn spawn_sapling(&self, idx: usize, grid: &mut Grid<Option<u32>>) {
+    fn spawn_sapling(&self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>) {
         let mut rng = rand::thread_rng();
         let mut adjacent_cells = grid.get_adjacent_cells(idx);
 
@@ -62,7 +61,7 @@ impl Tree {
         for cell in adjacent_cells {
             let idx = grid.to_index(cell.x, cell.y);
             if let None = grid.data[idx] {
-                grid.place(Some(Forest::SAPLING), cell.x, cell.y);
+                grid.place(Some(Box::new(Tree::new(TreeKind::Sapling))), cell.x, cell.y);
 
                 break;
             }
@@ -71,11 +70,15 @@ impl Tree {
 }
 
 impl Entity for Tree {
-    fn get_type(&self) -> EntityType {
-        EntityType::Tree
+    fn get_symbol(&self) -> &str {
+        match self.kind {
+            TreeKind::Sapling => "~",
+            TreeKind::Mature  => "t",
+            TreeKind::Elder   => "T",
+        }
     }
 
-    fn update(&self, idx: usize, grid: &mut Grid<Option<u32>>) {
+    fn update(&self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>) {
         let mut rng = rand::thread_rng();
         let chance = self.get_spawn_chance();
         let choice = rng.gen_range(0..100);
