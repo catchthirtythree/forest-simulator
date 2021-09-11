@@ -2,7 +2,7 @@ use crate::grid::Grid;
 
 pub trait Entity: EntityClone {
     fn get_symbol(&self) -> &str;
-    fn update(&self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>);
+    fn update(&mut self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>);
 }
 
 pub trait EntityClone {

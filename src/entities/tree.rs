@@ -1,4 +1,5 @@
 use crate::entities::entity::Entity;
+use crate::forest::Forest;
 use crate::grid::Grid;
 
 use rand::Rng;
@@ -43,6 +44,8 @@ impl Tree {
     }
 
     fn grow(&mut self) {
+        self.age += 1;
+
         if self.age == Tree::SAPLING_GROW_AGE {
             self.kind = TreeKind::Mature;
         } else if self.age == Tree::MATURE_GROW_AGE{
@@ -78,7 +81,7 @@ impl Entity for Tree {
         }
     }
 
-    fn update(&self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>) {
+    fn update(&mut self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>) {
         let mut rng = rand::thread_rng();
         let chance = self.get_spawn_chance();
         let choice = rng.gen_range(0..100);
@@ -86,5 +89,7 @@ impl Entity for Tree {
         if choice <= chance {
             self.spawn_sapling(idx, grid);
         }
+
+        self.grow();
     }
 }

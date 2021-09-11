@@ -40,7 +40,7 @@ impl<T: Clone> Grid<T> {
             let x = x as usize;
             let y = y as usize;
 
-            if x > self.width || y > self.height {
+            if x >= self.width || y >= self.height {
                 continue;
             }
 
@@ -112,6 +112,14 @@ mod tests {
             Cell { x: 3, y: 1 },
             Cell { x: 1, y: 2 },
             Cell { x: 2, y: 2 },
+            Cell { x: 3, y: 2 },
+        ]);
+
+        let cells = grid.get_adjacent_cells(14);
+        println!("{:?}", cells);
+        assert!(cells == vec![
+            Cell { x: 3, y: 1 },
+            Cell { x: 4, y: 1 },
             Cell { x: 3, y: 2 },
         ]);
     }

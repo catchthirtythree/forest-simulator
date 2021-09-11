@@ -8,7 +8,7 @@ use crate::grid::Grid;
 pub struct Forest {
     width: usize,
     height: usize,
-    grid: Grid<Option<Box<dyn Entity>>>,
+    pub grid: Grid<Option<Box<dyn Entity>>>,
     pub months_elapsed: u32,
 }
 
@@ -90,31 +90,15 @@ impl Forest {
     pub fn update(&mut self) {
         self.months_elapsed += 1;
 
-        // for cell in &self.grid {
-        //     match *cell {
-        //         Forest::BEAR => {
+        // @TODO This does not work since we end up mutating
+        // a clone of the grid instead of the actual grid.
 
-        //         },
-
-        //         Forest::LUMBERJACK => {
-
-        //         },
-
-        //         Forest::SAPLING => {
-
-        //         },
-
-        //         Forest::TREE => {
-
-        //         },
-
-        //         Forest::ELDER_TREE => {
-
-        //         },
-
-        //         _ => continue
-        //     }
-        // }
+        for (idx, cell) in self.grid.data.clone().iter_mut().enumerate() {
+            match cell {
+                Some(entity) => entity.update(idx, &mut self.grid),
+                None         => continue
+            }
+        }
     }
 }
 

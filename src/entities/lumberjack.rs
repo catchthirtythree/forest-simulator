@@ -36,7 +36,7 @@ impl Entity for Lumberjack {
         "l"
     }
 
-    fn update(&self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>) {
+    fn update(&mut self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>) {
         // @TODO Wander to a spot. Perhaps return Option.
         // @TODO Harvest from the spot wandered to.
     }
