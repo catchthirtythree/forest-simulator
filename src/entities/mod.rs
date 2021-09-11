@@ -1,4 +1,4 @@
-mod entity;
-mod bear;
-mod lumberjack;
-mod tree;
+pub mod entity;
+pub mod bear;
+pub mod lumberjack;
+pub mod tree;
