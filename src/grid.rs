@@ -10,12 +10,12 @@ pub struct Grid<T> {
     pub data: Vec<T>,
 }
 
-impl<T: Clone> Grid<T> where T: Default {
-    pub fn new(width: usize, height: usize) -> Self {
+impl<T: Clone> Grid<T> {
+    pub fn new(default: T, width: usize, height: usize) -> Self {
         Self {
             width,
             height,
-            data: vec![T::default(); width * height]
+            data: vec![default; width * height]
         }
     }
 
@@ -75,9 +75,10 @@ mod tests {
 
     #[test]
     fn test_grid_new() {
+        let default = 0;
         let width = 5;
         let height = 3;
-        let grid = Grid::<u32>::new(width, height);
+        let grid = Grid::<u32>::new(default, width, height);
 
         assert!(grid.width == width);
         assert!(grid.height == height);
@@ -90,9 +91,10 @@ mod tests {
 
     #[test]
     fn test_grid_get_adjacent_cells() {
+        let default = 0;
         let width = 5;
         let height = 3;
-        let grid = Grid::<u32>::new(width, height);
+        let grid = Grid::<u32>::new(default, width, height);
 
         let cells = grid.get_adjacent_cells(0);
         assert!(cells == vec![
@@ -116,9 +118,10 @@ mod tests {
 
     #[test]
     fn test_grid_to_coords() {
+        let default = 0;
         let width = 5;
         let height = 3;
-        let grid = Grid::<u32>::new(width, height);
+        let grid = Grid::<u32>::new(default, width, height);
 
         let cell = grid.to_coords(0);
         assert!(cell.x == 0);
@@ -139,9 +142,10 @@ mod tests {
 
     #[test]
     fn test_grid_to_index() {
+        let default = 0;
         let width = 5;
         let height = 3;
-        let grid = Grid::<u32>::new(width, height);
+        let grid = Grid::<u32>::new(default, width, height);
 
         let cell = grid.to_index(0, 0);
         assert!(cell == 0);
@@ -158,9 +162,10 @@ mod tests {
 
     #[test]
     fn test_grid_place() {
+        let default = 0;
         let width = 5;
         let height = 3;
-        let mut grid = Grid::<u32>::new(width, height);
+        let mut grid = Grid::<u32>::new(default, width, height);
 
         for idx in 0..grid.data.len() {
             let cell = grid.to_coords(idx);

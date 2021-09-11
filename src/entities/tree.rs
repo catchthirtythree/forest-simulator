@@ -1,17 +1,19 @@
-use crate::grid::Grid;
+use crate::entities::entity::{Entity, EntityType};
 use crate::forest::Forest;
+use crate::grid::Grid;
 
 use rand::Rng;
 use rand::seq::SliceRandom;
 
-#[derive(PartialEq)]
-enum TreeKind {
+#[derive(Clone, PartialEq)]
+pub enum TreeKind {
     Sapling,
     Mature,
     Elder,
 }
 
-struct Tree {
+#[derive(Clone)]
+pub struct Tree {
     age: u32,
     kind: TreeKind,
 }
@@ -24,7 +26,7 @@ impl Tree {
     const SAPLING_GROW_AGE: u32 = 12;
     const MATURE_GROW_AGE: u32 = 120;
 
-    fn new(kind: TreeKind) -> Self {
+    pub fn new(kind: TreeKind) -> Self {
         Self {
             age: 0,
             kind
@@ -53,23 +55,33 @@ impl Tree {
     // Option for the Forest to place itself.
     fn spawn_sapling(&self, idx: usize, grid: &mut Grid<Option<u32>>) {
         let mut rng = rand::thread_rng();
+        let mut adjacent_cells = grid.get_adjacent_cells(idx);
 
+        adjacent_cells.shuffle(&mut rng);
+
+        for cell in adjacent_cells {
+            let idx = grid.to_index(cell.x, cell.y);
+            if let None = grid.data[idx] {
+                grid.place(Some(Forest::SAPLING), cell.x, cell.y);
+
+                break;
+            }
+        }
+    }
+}
+
+impl Entity for Tree {
+    fn get_type(&self) -> EntityType {
+        EntityType::Tree
+    }
+
+    fn update(&self, idx: usize, grid: &mut Grid<Option<u32>>) {
+        let mut rng = rand::thread_rng();
         let chance = self.get_spawn_chance();
         let choice = rng.gen_range(0..100);
 
-        if choice < chance {
-            let mut adjacent_cells = grid.get_adjacent_cells(idx);
-
-            adjacent_cells.shuffle(&mut rng);
-
-            for cell in adjacent_cells {
-                let idx = grid.to_index(cell.x, cell.y);
-                if let None = grid.data[idx] {
-                    grid.place(Some(Forest::SAPLING), cell.x, cell.y);
-
-                    break;
-                }
-            }
+        if choice <= chance {
+            self.spawn_sapling(idx, grid);
         }
     }
 }

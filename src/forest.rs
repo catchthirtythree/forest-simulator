@@ -1,12 +1,14 @@
 use rand::Rng;
 use std::fmt;
 
+use crate::entities::entity::Entity;
+use crate::entities::tree::{TreeKind, Tree};
 use crate::grid::Grid;
 
 pub struct Forest {
     width: usize,
     height: usize,
-    grid: Grid<Option<u32>>,
+    grid: Grid<Option<Box<dyn Entity>>>,
     pub months_elapsed: u32,
 }
 
@@ -32,35 +34,22 @@ impl Forest {
         }
     }
 
-    fn create_grid(size: usize) -> Grid<Option<u32>> {
+    fn create_grid(size: usize) -> Grid<Option<Box<dyn Entity>>> {
         // Calculate the grid size
         let grid_size = size * size;
 
         // Create the empty grid that represents the forest
-        let mut grid = Grid::new(size, size);
+        let mut grid = Grid::<Option<Box<dyn Entity>>>::new(None, size, size);
 
-        // Calculate the initial number of trees and place them on the grid
-        let num_trees = (grid_size as f32 * Forest::STARTING_TREES) as usize;
-        for _ in 0..num_trees {
-            Forest::place_entity(&mut grid, Forest::TREE);
-        }
-
-        // Calculate the initial number of lumberjacks and place them on the grid
-        let num_lumberjacks = (grid_size as f32 * Forest::STARTING_LUMBERJACKS) as usize;
-        for _ in 0..num_lumberjacks {
-            Forest::place_entity(&mut grid, Forest::LUMBERJACK);
-        }
-
-        // Calculate the initial number of bears and place them on the grid
-        let num_bears = (grid_size as f32 * Forest::STARTING_BEARS) as usize;
-        for _ in 0..num_bears {
-            Forest::place_entity(&mut grid, Forest::BEAR);
-        }
+        // Place entities on the grid
+        // Forest::place_bear_entities(&mut grid, grid_size);
+        // Forest::place_lumberjack_entities(&mut grid, grid_size);
+        Forest::place_tree_entities(&mut grid, grid_size);
 
         grid
     }
 
-    fn place_entity(grid: &mut Grid<Option<u32>>, entity: u32) {
+    fn place_entity(grid: &mut Grid<Option<Box<dyn Entity>>>, entity: Box<dyn Entity>) {
         let mut rng = rand::thread_rng();
 
         loop {
@@ -74,22 +63,77 @@ impl Forest {
         }
     }
 
+    // fn place_bear_entities(grid: &mut Grid<Option<Box<dyn Entity>>>, grid_size: usize) {
+    //     let num_bears = (grid_size as f32 * Forest::STARTING_BEARS) as usize;
+
+    //     for _ in 0..num_bears {
+    //         Forest::place_entity(grid, Forest::BEAR);
+    //     }
+    // }
+
+    // fn place_lumberjack_entities(grid: &mut Grid<Option<Box<dyn Entity>>>, grid_size: usize) {
+    //     let num_lumberjacks = (grid_size as f32 * Forest::STARTING_LUMBERJACKS) as usize;
+
+    //     for _ in 0..num_lumberjacks {
+    //         Forest::place_entity(grid, Forest::LUMBERJACK);
+    //     }
+    // }
+
+    fn place_tree_entities(grid: &mut Grid<Option<Box<dyn Entity>>>, grid_size: usize) {
+        let num_trees = (grid_size as f32 * Forest::STARTING_TREES) as usize;
+
+        for _ in 0..num_trees {
+            Forest::place_entity(grid, Box::new(Tree::new(TreeKind::Mature)));
+        }
+    }
+
     pub fn update(&mut self) {
         self.months_elapsed += 1;
+
+        // for cell in &self.grid {
+        //     match *cell {
+        //         Forest::BEAR => {
+
+        //         },
+
+        //         Forest::LUMBERJACK => {
+
+        //         },
+
+        //         Forest::SAPLING => {
+
+        //         },
+
+        //         Forest::TREE => {
+
+        //         },
+
+        //         Forest::ELDER_TREE => {
+
+        //         },
+
+        //         _ => continue
+        //     }
+        // }
     }
 }
 
 impl fmt::Display for Forest {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for (idx, cell) in self.grid.data.iter().enumerate() {
+            // let symbol = match *cell {
+            //     None                     => ".",
+            //     Some(Forest::BEAR)       => "B",
+            //     Some(Forest::LUMBERJACK) => "L",
+            //     Some(Forest::SAPLING)    => "s",
+            //     Some(Forest::TREE)       => "T",
+            //     Some(Forest::ELDER_TREE) => "@",
+            //     Some(_)                  => panic!("The entity could not be found."),
+            // };
+
             let symbol = match *cell {
-                None                     => ".",
-                Some(Forest::BEAR)       => "B",
-                Some(Forest::LUMBERJACK) => "L",
-                Some(Forest::SAPLING)    => "s",
-                Some(Forest::TREE)       => "T",
-                Some(Forest::ELDER_TREE) => "@",
-                Some(_)                  => panic!("The entity could not be found."),
+                None    => ".",
+                Some(_) => "?"
             };
 
             if let Err(e) = write!(f, "{} ", symbol) {
