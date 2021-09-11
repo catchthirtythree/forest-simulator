@@ -91,7 +91,9 @@ impl Forest {
         self.months_elapsed += 1;
 
         // @TODO This does not work since we end up mutating
-        // a clone of the grid instead of the actual grid.
+        // cells from a clone of the grid instead of the actual grid.
+        // So forest updates happen, but entity updates don't happen in
+        // the forest we're actually working with.
 
         for (idx, cell) in self.grid.data.clone().iter_mut().enumerate() {
             match cell {

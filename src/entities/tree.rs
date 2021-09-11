@@ -1,5 +1,4 @@
 use crate::entities::entity::Entity;
-use crate::forest::Forest;
 use crate::grid::Grid;
 
 use rand::Rng;
