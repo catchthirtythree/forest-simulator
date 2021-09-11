@@ -107,16 +107,6 @@ impl Forest {
 impl fmt::Display for Forest {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for (idx, cell) in self.grid.data.iter().enumerate() {
-            // let symbol = match *cell {
-            //     None                     => ".",
-            //     Some(Forest::BEAR)       => "B",
-            //     Some(Forest::LUMBERJACK) => "L",
-            //     Some(Forest::SAPLING)    => "s",
-            //     Some(Forest::TREE)       => "T",
-            //     Some(Forest::ELDER_TREE) => "@",
-            //     Some(_)                  => panic!("The entity could not be found."),
-            // };
-
             let symbol = match cell {
                 None    => ".",
                 Some(e) => e.get_symbol()
