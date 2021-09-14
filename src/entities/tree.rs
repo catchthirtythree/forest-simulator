@@ -1,10 +1,7 @@
-use crate::entities::entity::Entity;
-use crate::grid::Grid;
+use crate::entities::entity::{Entity, EntityType};
+use std::fmt;
 
-use rand::Rng;
-use rand::seq::SliceRandom;
-
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TreeKind {
     Sapling,
     Mature,
@@ -13,8 +10,8 @@ pub enum TreeKind {
 
 #[derive(Clone)]
 pub struct Tree {
-    age: u32,
-    kind: TreeKind,
+    pub position: usize,
+    pub age: u32,
 }
 
 impl Tree {
@@ -25,70 +22,71 @@ impl Tree {
     const SAPLING_GROW_AGE: u32 = 12;
     const MATURE_GROW_AGE: u32 = 120;
 
-    pub fn new(kind: TreeKind) -> Self {
+    pub fn new(position: usize, age: u32) -> Self {
         Self {
-            age: 0,
-            kind,
+            position,
+            age,
         }
     }
 
-    fn get_spawn_chance(&self) -> u32 {
-        if self.kind == TreeKind::Mature {
+    pub fn get_harvest_amount(&self) -> u32 {
+        match self.get_tree_kind() {
+            TreeKind::Sapling => 0,
+            TreeKind::Mature => 1,
+            TreeKind::Elder => 2,
+        }
+    }
+
+    pub fn get_tree_kind(&self) -> TreeKind {
+        if self.age < 12 {
+            TreeKind::Sapling
+        } else if self.age < 120 {
+            TreeKind::Mature
+        } else {
+            TreeKind::Elder
+        }
+    }
+
+    pub fn get_spawn_chance(&self) -> u32 {
+        let kind = self.get_tree_kind();
+        if kind == TreeKind::Mature {
             Tree::MATURE_SPAWN_CHANCE
-        } else if self.kind == TreeKind::Elder {
+        } else if kind == TreeKind::Elder {
             Tree::ELDER_SPAWN_CHANCE
         } else {
             Tree::SAPLING_SPAWN_CHANCE
         }
     }
 
-    fn grow(&mut self) {
+    pub fn grow(&mut self) {
         self.age += 1;
-
-        if self.age == Tree::SAPLING_GROW_AGE {
-            self.kind = TreeKind::Mature;
-        } else if self.age == Tree::MATURE_GROW_AGE{
-            self.kind = TreeKind::Elder;
-        }
-    }
-
-    // @TODO Instead of passing a mutable grid, perhaps we should return an
-    // Option for the Forest to place itself.
-    fn spawn_sapling(&self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>) {
-        let mut rng = rand::thread_rng();
-        let mut adjacent_cells = grid.get_adjacent_cells(idx);
-
-        adjacent_cells.shuffle(&mut rng);
-
-        for cell in adjacent_cells {
-            let idx = grid.to_index(cell.x, cell.y);
-            if let None = grid.data[idx] {
-                grid.place(Some(Box::new(Tree::new(TreeKind::Sapling))), cell.x, cell.y);
-
-                break;
-            }
-        }
     }
 }
 
 impl Entity for Tree {
+    fn get_entity_type(&self) -> EntityType {
+        EntityType::Tree
+    }
+
+    fn get_position(&self) -> usize {
+        self.position
+    }
+
     fn get_symbol(&self) -> &str {
-        match self.kind {
+        let kind = self.get_tree_kind();
+        match kind {
             TreeKind::Sapling => "~",
             TreeKind::Mature  => "t",
             TreeKind::Elder   => "T",
         }
     }
+}
 
-    fn update(&mut self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>) {
-        let mut rng = rand::thread_rng();
-        let chance = self.get_spawn_chance();
-        let choice = rng.gen_range(0..100);
-
-        if choice <= chance {
-            self.spawn_sapling(idx, grid);
-        }
-
-        self.grow();
+impl fmt::Debug for Tree {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Tree")
+            .field("position", &self.position)
+            .field("age", &self.age)
+            .finish()
     }
 }

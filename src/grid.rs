@@ -1,33 +1,21 @@
 #[derive(Debug, PartialEq)]
-pub struct Cell {
+pub struct Position {
     pub x: usize,
     pub y: usize,
 }
 
-pub struct Grid<T> {
-    width: usize,
-    height: usize,
-    pub data: Vec<T>,
-}
+pub struct GridUtils;
 
-impl<T: Clone> Grid<T> {
-    pub fn new(default: T, width: usize, height: usize) -> Self {
-        Self {
-            width,
-            height,
-            data: vec![default; width * height]
-        }
-    }
-
-    pub fn get_adjacent_cells(&self, idx: usize) -> Vec<Cell> {
+impl GridUtils {
+    pub fn get_adjacent_positions(idx: usize, width: usize, height: usize) -> Vec<Position> {
         let adjacent_movements: Vec<(isize, isize)> = vec![
             ( -1, -1), ( 0, -1), ( 1, -1),
             ( -1,  0),           ( 1,  0),
             ( -1,  1), ( 0,  1), ( 1,  1),
         ];
 
-        let cell = self.to_coords(idx);
-        let mut adjacent_cells = vec![];
+        let cell = GridUtils::to_coords(idx, width);
+        let mut adjacent_positions = vec![];
 
         for movement in adjacent_movements {
             let x = cell.x as isize + movement.0;
@@ -40,161 +28,102 @@ impl<T: Clone> Grid<T> {
             let x = x as usize;
             let y = y as usize;
 
-            if x >= self.width || y >= self.height {
+            if x >= width || y >= height {
                 continue;
             }
 
-            adjacent_cells.push(Cell { x, y });
+            adjacent_positions.push(Position { x, y });
         }
 
-        adjacent_cells
+        adjacent_positions
     }
 
-    pub fn to_coords(&self, idx: usize) -> Cell {
-        let x = (idx % self.width) as usize;
-        let y = (idx / self.width) as usize;
+    pub fn to_coords(idx: usize, width: usize) -> Position {
+        let x = (idx % width) as usize;
+        let y = (idx / width) as usize;
 
-        Cell { x, y }
+        Position { x, y }
     }
 
-    pub fn to_index(&self, x: usize, y: usize) -> usize {
-        y * self.width + x
-    }
-
-    pub fn place(&mut self, data: T, x: usize, y: usize) {
-        let index = self.to_index(x, y);
-
-        self.data[index] = data;
+    pub fn to_index(x: usize, y: usize, width: usize) -> usize {
+        y * width + x
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::grid::Cell;
-    use crate::grid::Grid;
-
-    #[test]
-    fn test_grid_new() {
-        let default = 0;
-        let width = 5;
-        let height = 3;
-        let grid = Grid::<u32>::new(default, width, height);
-
-        assert!(grid.width == width);
-        assert!(grid.height == height);
-        assert!(grid.data == [
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0
-        ]);
-    }
+    use crate::grid::Position;
+    use crate::grid::GridUtils;
 
     #[test]
     fn test_grid_get_adjacent_cells() {
-        let default = 0;
         let width = 5;
         let height = 3;
-        let grid = Grid::<u32>::new(default, width, height);
 
-        let cells = grid.get_adjacent_cells(0);
+        let cells = GridUtils::get_adjacent_positions(0, width, height);
         assert!(cells == vec![
-            Cell { x: 1, y: 0 },
-            Cell { x: 0, y: 1 },
-            Cell { x: 1, y: 1 },
+            Position { x: 1, y: 0 },
+            Position { x: 0, y: 1 },
+            Position { x: 1, y: 1 },
         ]);
 
-        let cells = grid.get_adjacent_cells(7);
+        let cells = GridUtils::get_adjacent_positions(7, width, height);
         assert!(cells == vec![
-            Cell { x: 1, y: 0 },
-            Cell { x: 2, y: 0 },
-            Cell { x: 3, y: 0 },
-            Cell { x: 1, y: 1 },
-            Cell { x: 3, y: 1 },
-            Cell { x: 1, y: 2 },
-            Cell { x: 2, y: 2 },
-            Cell { x: 3, y: 2 },
+            Position { x: 1, y: 0 },
+            Position { x: 2, y: 0 },
+            Position { x: 3, y: 0 },
+            Position { x: 1, y: 1 },
+            Position { x: 3, y: 1 },
+            Position { x: 1, y: 2 },
+            Position { x: 2, y: 2 },
+            Position { x: 3, y: 2 },
         ]);
 
-        let cells = grid.get_adjacent_cells(14);
-        println!("{:?}", cells);
+        let cells = GridUtils::get_adjacent_positions(14, width, height);
         assert!(cells == vec![
-            Cell { x: 3, y: 1 },
-            Cell { x: 4, y: 1 },
-            Cell { x: 3, y: 2 },
+            Position { x: 3, y: 1 },
+            Position { x: 4, y: 1 },
+            Position { x: 3, y: 2 },
         ]);
     }
 
     #[test]
     fn test_grid_to_coords() {
-        let default = 0;
         let width = 5;
         let height = 3;
-        let grid = Grid::<u32>::new(default, width, height);
 
-        let cell = grid.to_coords(0);
+        let cell = GridUtils::to_coords(0, width);
         assert!(cell.x == 0);
         assert!(cell.y == 0);
 
-        let cell = grid.to_coords(14);
+        let cell = GridUtils::to_coords(14, width);
         assert!(cell.x == 4);
         assert!(cell.y == 2);
 
-        let cell = grid.to_coords(4);
+        let cell = GridUtils::to_coords(4, width);
         assert!(cell.x == 4);
         assert!(cell.y == 0);
 
-        let cell = grid.to_coords(11);
+        let cell = GridUtils::to_coords(11, width);
         assert!(cell.x == 1);
         assert!(cell.y == 2);
     }
 
     #[test]
     fn test_grid_to_index() {
-        let default = 0;
         let width = 5;
         let height = 3;
-        let grid = Grid::<u32>::new(default, width, height);
 
-        let cell = grid.to_index(0, 0);
+        let cell = GridUtils::to_index(0, 0, width);
         assert!(cell == 0);
 
-        let cell = grid.to_index(4, 2);
+        let cell = GridUtils::to_index(4, 2, width);
         assert!(cell == 14);
 
-        let cell = grid.to_index(4, 0);
+        let cell = GridUtils::to_index(4, 0, width);
         assert!(cell == 4);
 
-        let cell = grid.to_index(1, 2);
+        let cell = GridUtils::to_index(1, 2, width);
         assert!(cell == 11);
-    }
-
-    #[test]
-    fn test_grid_place() {
-        let default = 0;
-        let width = 5;
-        let height = 3;
-        let mut grid = Grid::<u32>::new(default, width, height);
-
-        for idx in 0..grid.data.len() {
-            let cell = grid.to_coords(idx);
-
-            grid.place(idx as u32, cell.x, cell.y);
-        }
-
-        assert!(grid.data[0] == 0);
-        assert!(grid.data[1] == 1);
-        assert!(grid.data[2] == 2);
-        assert!(grid.data[3] == 3);
-        assert!(grid.data[4] == 4);
-        assert!(grid.data[5] == 5);
-        assert!(grid.data[6] == 6);
-        assert!(grid.data[7] == 7);
-        assert!(grid.data[8] == 8);
-        assert!(grid.data[9] == 9);
-        assert!(grid.data[10] == 10);
-        assert!(grid.data[11] == 11);
-        assert!(grid.data[12] == 12);
-        assert!(grid.data[13] == 13);
-        assert!(grid.data[14] == 14);
     }
 }

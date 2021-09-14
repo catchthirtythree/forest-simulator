@@ -1,6 +1,19 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+/// The one biggest mistake I've made during all of this is thinking that
+/// structures could be more than data holders. In this instance, they need
+/// to be just that so I don't constantly run into silly immutable borrows
+/// with the Forest structure.
+///
+/// Similar to an ECS, the systems, or in this case, the Forest, needs to
+/// do all of the heavy lifting and leave the Bears, Lumberjacks and Trees
+/// as data holders and nothing more. They can have a few simple functions
+/// on them, like the Tree could grow when it needs to grow, and they
+/// can know what kind of symbol they would be graphically, but they
+/// need to do nothing more otherwise we run into dumb errors that...
+/// make total sense.
+
 /// Forest Simulation
 ///
 /// The simulation revolves around a forest.
@@ -36,7 +49,7 @@
 /// -----------
 /// Lumberjacks wander randomly three times at the end of a month.
 ///
-/// Lumberjacks harvest Trees that they wander into and gain lumber.
+/// Lumberjacks harvest Trees that they wander onto and gain lumber.
 /// Once they've harvested a Tree, the cannot wander anymore.
 ///
 /// Lumberjacks do not cut down Saplings, only Trees and Elder Trees.
@@ -56,7 +69,7 @@
 /// -----
 /// Bears wander randomly five times at the end of a month.
 ///
-/// Bears maw Lumberjacks that they wander into adding to the number of
+/// Bears maw Lumberjacks that they wander onto adding to the number of
 /// accidents in the forest. Once a Bear maws a Lumberjack, they cannot
 /// wander anymore.
 ///
@@ -105,8 +118,9 @@ fn main() {
     let mut forest = Forest::new(10);
 
     while forest.months_elapsed != TOTAL_MONTHS {
+        print!("\x1B[2J\x1B[1;1H");
         forest.update();
+        println!("{}", forest);
+        std::thread::sleep_ms(500);
     }
-
-    println!("{}", forest);
 }

@@ -1,22 +1,20 @@
-use crate::grid::Grid;
+use std::fmt;
 
-pub trait Entity: EntityClone {
+#[derive(Debug)]
+pub enum EntityType {
+    Bear,
+    Lumberjack,
+    Tree
+}
+
+pub trait Entity {
+    fn get_entity_type(&self) -> EntityType;
+    fn get_position(&self) -> usize;
     fn get_symbol(&self) -> &str;
-    fn update(&mut self, idx: usize, grid: &mut Grid<Option<Box<dyn Entity>>>);
 }
 
-pub trait EntityClone {
-    fn clone_box(&self) -> Box<dyn Entity>;
-}
-
-impl<T> EntityClone for T where T: 'static + Entity + Clone {
-    fn clone_box(&self) -> Box<dyn Entity> {
-        Box::new(self.clone())
-    }
-}
-
-impl Clone for Box<dyn Entity> {
-    fn clone(&self) -> Box<dyn Entity> {
-        self.clone_box()
+impl fmt::Debug for dyn Entity {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "{:?}", self.get_entity_type())
     }
 }
