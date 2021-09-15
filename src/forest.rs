@@ -17,6 +17,7 @@ pub struct Forest {
     pub trees: Vec<Tree>,
     pub months_elapsed: u32,
     pub yearly_lumber: u32,
+    pub yearly_maulings: u32,
 }
 
 impl Forest {
@@ -39,6 +40,7 @@ impl Forest {
             trees,
             months_elapsed: 0,
             yearly_lumber: 0,
+            yearly_maulings: 0,
         }
     }
 
@@ -121,8 +123,13 @@ impl Forest {
 
     fn harvest_tree(&self, lumberjack: &Lumberjack, trees: &Vec<Tree>) -> Option<usize> {
         trees.iter().position(|t| {
-            t.position == lumberjack.position
-                && t.get_tree_kind() != TreeKind::Sapling
+            t.position == lumberjack.position && t.get_tree_kind() != TreeKind::Sapling
+        })
+    }
+
+    fn maul_lumberjack(&self, bear: &Bear, lumberjacks: &Vec<Lumberjack>) -> Option<usize> {
+        lumberjacks.iter().position(|l| {
+            l.position == bear.position
         })
     }
 
@@ -153,7 +160,26 @@ impl Forest {
     pub fn update(&mut self) {
         self.months_elapsed += 1;
 
-        // @TODO Handle bear update logic
+        // Handle bear update logic
+
+        for idx in 0..self.bears.len() {
+            let mut occupied_positions = self.bears.iter()
+                .map(|b| (b.position, false)).collect::<Vec<(usize, bool)>>();
+            occupied_positions.append(&mut self.lumberjacks.iter()
+                .map(|l| (l.position, true)).collect::<Vec<(usize, bool)>>());
+
+            let bear = self.bears.get_mut(idx).unwrap();
+            bear.wander(self.width, self.height, &occupied_positions);
+        }
+
+        for bear in self.bears.iter() {
+            let mauled_lumberjack = self.maul_lumberjack(bear, &self.lumberjacks);
+
+            if let Some(idx) = mauled_lumberjack {
+                self.yearly_maulings += 1;
+                self.lumberjacks.remove(idx);
+            }
+        }
 
         // Handle lumberjack update logic
 
@@ -227,11 +253,33 @@ impl Forest {
                 }
             }
 
-            // @TODO Handle bear event
+            // Handle bear event
+
+            if self.yearly_maulings as usize == 0 {
+                println!("Conjuring a bear.");
+
+                let grid_size = self.width * self.height;
+
+                if let Some(idx) = Forest::get_open_space(grid_size, self.bears.clone()) {
+                    self.bears.push(Bear::new(idx));
+                }
+            } else {
+                println!("Murdering a bear.");
+
+                let bear = self.bears.choose(&mut rand::thread_rng());
+
+                if let Some(br) = bear {
+                    let idx = self.bears.iter()
+                        .position(|b| b.position == br.position).unwrap();
+
+                    self.bears.remove(idx);
+                }
+            }
 
             // Reset counts
 
             self.yearly_lumber = 0;
+            self.yearly_maulings = 0;
         }
     }
 }

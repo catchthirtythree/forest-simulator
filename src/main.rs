@@ -118,11 +118,12 @@ fn main() {
     let mut forest = Forest::new(10);
 
     while forest.months_elapsed != TOTAL_MONTHS {
+        print!("\x1B[2J\x1B[1;1H");
+
         forest.update();
 
-        print!("\x1B[2J\x1B[1;1H");
         println!("{}", forest);
 
-        std::thread::sleep(std::time::Duration::from_millis(250));
+        std::thread::sleep(std::time::Duration::from_millis(500));
     }
 }
