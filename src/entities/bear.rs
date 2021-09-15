@@ -23,7 +23,7 @@ impl Bear {
         let mut wanders = 0;
         let mut attempts = 0;
 
-        while wanders < 3 {
+        while wanders < 5 {
             attempts += 1;
 
             let adjacent_positions = GridUtils::get_adjacent_positions(self.position, width, height);
