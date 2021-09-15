@@ -77,7 +77,7 @@ impl Entity for Tree {
         match kind {
             TreeKind::Sapling => "~",
             TreeKind::Mature  => "t",
-            TreeKind::Elder   => "T",
+            TreeKind::Elder   => "!",
         }
     }
 }

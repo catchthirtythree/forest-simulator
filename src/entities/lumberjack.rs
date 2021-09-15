@@ -15,15 +15,6 @@ impl Lumberjack {
         }
     }
 
-    // fn harvest(&self) {
-        // Lumberjacks harvest Trees that they wander into and gain lumber.
-        // Once they've harvested a Tree, the cannot wander anymore.
-
-        // Lumberjacks do not cut down Saplings, only Trees and Elder Trees.
-
-        // Lumberjacks gain 1 piece of lumber per Tree, and 2 pieces per Elder Tree.
-    // }
-
     pub fn wander(&mut self, width: usize, height: usize,
                     occupied_positions: &Vec<(usize, bool)>) {
         let mut rng = rand::thread_rng();
@@ -71,6 +62,6 @@ impl Entity for Lumberjack {
     }
 
     fn get_symbol(&self) -> &str {
-        "l"
+        "@"
     }
 }

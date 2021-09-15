@@ -1,4 +1,5 @@
 use crate::entities::entity::{Entity};
+use crate::entities::bear::Bear;
 use crate::entities::lumberjack::Lumberjack;
 use crate::entities::tree::{Tree, TreeKind};
 use crate::grid::GridUtils;
@@ -11,7 +12,7 @@ use std::fmt;
 pub struct Forest {
     pub width: usize,
     pub height: usize,
-    // pub bears: Vec<Bear>,
+    pub bears: Vec<Bear>,
     pub lumberjacks: Vec<Lumberjack>,
     pub trees: Vec<Tree>,
     pub months_elapsed: u32,
@@ -26,12 +27,14 @@ impl Forest {
     pub fn new(size: usize) -> Self {
         let grid_size = size * size;
 
+        let bears = Forest::create_bear_entities(grid_size);
         let lumberjacks = Forest::create_lumberjack_entities(grid_size);
         let trees = Forest::create_tree_entities(grid_size);
 
         Forest {
             width: size,
             height: size,
+            bears,
             lumberjacks,
             trees,
             months_elapsed: 0,
@@ -74,21 +77,19 @@ impl Forest {
         }
     }
 
-    // fn place_bear_entities(grid: &mut Grid<Option<Box<dyn Entity>>>, grid_size: usize) {
-    //     let num_bears = (grid_size as f32 * Forest::STARTING_BEARS) as usize;
+    fn create_bear_entities(grid_size: usize) -> Vec<Bear> {
+        let mut bears: Vec<Bear> = vec![];
+        let num_bears = (grid_size as f32 * Forest::STARTING_BEARS) as usize;
 
-    //     for _ in 0..num_bears {
-    //         Forest::place_entity(grid, Forest::BEAR);
-    //     }
-    // }
+        for _ in 0..num_bears {
+            match Forest::get_open_space(grid_size, bears.clone()) {
+                Some(idx) => bears.push(Bear::new(idx)),
+                None      => continue
+            }
+        }
 
-    // fn place_lumberjack_entities(grid: &mut Grid<Option<Box<dyn Entity>>>, grid_size: usize) {
-    //     let num_lumberjacks = (grid_size as f32 * Forest::STARTING_LUMBERJACKS) as usize;
-
-    //     for _ in 0..num_lumberjacks {
-    //         Forest::place_entity(grid, Forest::LUMBERJACK);
-    //     }
-    // }
+        bears
+    }
 
     fn create_lumberjack_entities(grid_size: usize) -> Vec<Lumberjack> {
         let mut lumberjacks: Vec<Lumberjack> = vec![];
