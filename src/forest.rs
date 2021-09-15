@@ -153,6 +153,8 @@ impl Forest {
     pub fn update(&mut self) {
         self.months_elapsed += 1;
 
+        // @TODO Handle bear update logic
+
         // Handle lumberjack update logic
 
         for idx in 0..self.lumberjacks.len() {
@@ -225,6 +227,8 @@ impl Forest {
                 }
             }
 
+            // @TODO Handle bear event
+
             // Reset counts
 
             self.yearly_lumber = 0;
@@ -236,14 +240,16 @@ impl fmt::Display for Forest {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut entity_map: HashMap<usize, &dyn Entity> = HashMap::new();
 
-        // println!("{:?}", self.trees);
-
         for tree in &self.trees {
             entity_map.insert(tree.position, tree);
         }
 
         for lumberjack in &self.lumberjacks {
             entity_map.insert(lumberjack.position, lumberjack);
+        }
+
+        for bear in &self.bears {
+            entity_map.insert(bear.position, bear);
         }
 
         let grid_size = self.width * self.height;
