@@ -1,7 +1,7 @@
-use crate::entities::entity::{Entity};
-use crate::entities::bear::Bear;
-use crate::entities::lumberjack::Lumberjack;
-use crate::entities::tree::{Tree, TreeKind};
+use crate::entity::{Entity};
+use crate::bear::Bear;
+use crate::lumberjack::Lumberjack;
+use crate::tree::{Tree, TreeKind};
 use crate::grid::GridUtils;
 
 use rand::Rng;
@@ -43,24 +43,6 @@ impl Forest {
             yearly_maulings: 0,
         }
     }
-
-    // pub fn get_adjacent_entities(&self, idx: usize) -> Vec<Box<dyn Entity>> {
-    //     let adjacent_positions = GridUtils::get_adjacent_positions(idx, self.width, self.height);
-    //     let entity_map = Forest::create_entity_map(&self.entities);
-
-    //     let mut adjacent_entities: Vec<Box<dyn Entity>> = vec![];
-
-    //     for position in adjacent_positions {
-    //         let idx = GridUtils::to_index(position.x, position.y, self.width);
-
-    //         match entity_map.get(&idx) {
-    //             Some(entity) => adjacent_entities.push(entity.clone()),
-    //             None         => continue
-    //         }
-    //     }
-
-    //     adjacent_entities
-    // }
 
     fn get_open_space<T: Clone + Entity>(grid_size: usize, entities: Vec<T>) -> Option<usize> {
         if entities.len() == grid_size {

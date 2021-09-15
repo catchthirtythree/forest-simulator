@@ -1,4 +1,4 @@
-use crate::entities::entity::{Entity, EntityType};
+use crate::entity::{Entity, EntityType};
 use crate::grid::GridUtils;
 
 use rand::seq::SliceRandom;

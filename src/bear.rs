@@ -1,4 +1,4 @@
-use crate::entities::entity::{Entity, EntityType};
+use crate::entity::{Entity, EntityType};
 use crate::grid::GridUtils;
 
 use rand::seq::SliceRandom;
@@ -45,6 +45,7 @@ impl Bear {
                     attempts = 0;
                 }
             }
+
             if attempts == 2 {
                 break;
             }

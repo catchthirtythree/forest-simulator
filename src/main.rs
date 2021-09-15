@@ -106,9 +106,12 @@
 /// hard about how everything will work.
 ///
 
-mod entities;
+mod bear;
+mod entity;
 mod forest;
 mod grid;
+mod lumberjack;
+mod tree;
 
 use crate::forest::Forest;
 
