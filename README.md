@@ -1,3 +1,15 @@
+## The Forest
+
+This is a challenge that can be found on the DailyProgrammer subreddit that I did a few years ago in Java very poorly. I'm in the midst of learning Rust and I thought this would be a cool project to just get done and then iterate over as I get better at the language.
+
+I would like to tackle the list below because I think they would be fun and would help me learn as well:
+* Just finish it
+* Make it deterministic and add the ability to seed it
+* Create a UI for it (web or desktop)
+* Make it faster and / or less memory intensive
+
+---
+
 <div style="background-color: #FFFDD0;">
 
 <div style="color: black; padding: 10px 5px; padding-bottom: 0px;">
