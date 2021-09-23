@@ -1,7 +1,6 @@
 use crate::entity::{Entity, EntityType};
 use crate::grid::GridUtils;
-
-use rand::seq::SliceRandom;
+use crate::random::Random;
 
 #[derive(Clone, Debug)]
 pub struct Lumberjack {
@@ -15,9 +14,13 @@ impl Lumberjack {
         }
     }
 
-    pub fn wander(&mut self, width: usize, height: usize,
-                    occupied_positions: &Vec<(usize, bool)>) {
-        let mut rng = rand::thread_rng();
+    pub fn wander(
+        &mut self,
+        random: &mut Random,
+        width: usize,
+        height: usize,
+        occupied_positions: &Vec<(usize, bool)>
+    ) {
         let grid_size = width * height;
 
         let mut wanders = 0;
@@ -27,7 +30,7 @@ impl Lumberjack {
             attempts += 1;
 
             let adjacent_positions = GridUtils::get_adjacent_positions(self.position, width, height);
-            let picked_position = adjacent_positions.choose(&mut rng).unwrap();
+            let picked_position = random.choose(&adjacent_positions).unwrap();
             let picked_idx = GridUtils::to_index(picked_position.x, picked_position.y, width);
             let position = occupied_positions.iter().find(|op| op.0 == picked_idx);
 

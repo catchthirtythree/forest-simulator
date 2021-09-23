@@ -1,3 +1,6 @@
+use crate::entity::Entity;
+use crate::random::Random;
+
 #[derive(Debug, PartialEq)]
 pub struct Position {
     pub x: usize,
@@ -36,6 +39,25 @@ impl GridUtils {
         }
 
         adjacent_positions
+    }
+
+    pub fn get_open_space<T: Entity>(
+        random: &mut Random,
+        grid_size: usize,
+        entities: &Vec<T>
+    ) -> Option<usize> {
+        if entities.len() == grid_size {
+            None
+        } else {
+            loop {
+                let idx = random.next() as usize % grid_size;
+                let entity = entities.iter().find(|e| e.get_position() == idx);
+
+                if let None = entity {
+                    return Some(idx);
+                }
+            }
+        }
     }
 
     pub fn to_coords(idx: usize, width: usize) -> Position {

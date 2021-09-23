@@ -3,13 +3,13 @@ use crate::bear::Bear;
 use crate::lumberjack::Lumberjack;
 use crate::tree::{Tree, TreeKind};
 use crate::grid::GridUtils;
+use crate::random::Random;
 
-use rand::Rng;
-use rand::seq::SliceRandom;
 use std::collections::HashMap;
 use std::fmt;
 
 pub struct Forest {
+    pub random: Random,
     pub width: usize,
     pub height: usize,
     pub bears: Vec<Bear>,
@@ -26,81 +26,60 @@ impl Forest {
     pub const STARTING_BEARS: f32 = 0.02;
 
     pub fn new(size: usize) -> Self {
+        let random = Random(1234567890);
         let grid_size = size * size;
 
-        let bears = Forest::create_bear_entities(grid_size);
-        let lumberjacks = Forest::create_lumberjack_entities(grid_size);
-        let trees = Forest::create_tree_entities(grid_size);
-
-        Forest {
+        let mut forest = Forest {
+            random,
             width: size,
             height: size,
-            bears,
-            lumberjacks,
-            trees,
+            bears: vec![],
+            lumberjacks: vec![],
+            trees: vec![],
             months_elapsed: 0,
             yearly_lumber: 0,
             yearly_maulings: 0,
-        }
+        };
+
+        forest.setup();
+
+        forest
     }
 
-    fn get_open_space<T: Clone + Entity>(grid_size: usize, entities: Vec<T>) -> Option<usize> {
-        if entities.len() == grid_size {
-            None
-        } else {
-            let mut rng = rand::thread_rng();
-
-            loop {
-                let idx = rng.gen_range(0..grid_size);
-                let entity = entities.iter().find(|e| e.get_position() == idx);
-
-                if let None = entity {
-                    return Some(idx);
-                }
-            }
-        }
-    }
-
-    fn create_bear_entities(grid_size: usize) -> Vec<Bear> {
-        let mut bears: Vec<Bear> = vec![];
+    fn create_bear_entities(&mut self, grid_size: usize) {
+        let grid_size = self.width * self.height;
         let num_bears = (grid_size as f32 * Forest::STARTING_BEARS) as usize;
 
         for _ in 0..num_bears {
-            match Forest::get_open_space(grid_size, bears.clone()) {
-                Some(idx) => bears.push(Bear::new(idx)),
+            match GridUtils::get_open_space(&mut self.random, grid_size, &self.bears) {
+                Some(idx) => self.bears.push(Bear::new(idx)),
                 None      => continue
             }
         }
-
-        bears
     }
 
-    fn create_lumberjack_entities(grid_size: usize) -> Vec<Lumberjack> {
-        let mut lumberjacks: Vec<Lumberjack> = vec![];
+    fn create_lumberjack_entities(&mut self, grid_size: usize) {
+        let grid_size = self.width * self.height;
         let num_lumberjacks = (grid_size as f32 * Forest::STARTING_LUMBERJACKS) as usize;
 
         for _ in 0..num_lumberjacks {
-            match Forest::get_open_space(grid_size, lumberjacks.clone()) {
-                Some(idx) => lumberjacks.push(Lumberjack::new(idx)),
+            match GridUtils::get_open_space(&mut self.random, grid_size, &self.lumberjacks) {
+                Some(idx) => self.lumberjacks.push(Lumberjack::new(idx)),
                 None      => continue
             }
         }
-
-        lumberjacks
     }
 
-    fn create_tree_entities(grid_size: usize) -> Vec<Tree> {
-        let mut trees: Vec<Tree> = vec![];
+    fn create_tree_entities(&mut self, grid_size: usize) {
+        let grid_size = self.width * self.height;
         let num_trees = (grid_size as f32 * Forest::STARTING_TREES) as usize;
 
         for _ in 0..num_trees {
-            match Forest::get_open_space(grid_size, trees.clone()) {
-                Some(idx) => trees.push(Tree::new(idx, 12)),
+            match GridUtils::get_open_space(&mut self.random, grid_size, &self.trees) {
+                Some(idx) => self.trees.push(Tree::new(idx, 12)),
                 None      => continue
             }
         }
-
-        trees
     }
 
     fn harvest_tree(&self, lumberjack: &Lumberjack, trees: &Vec<Tree>) -> Option<usize> {
@@ -115,16 +94,16 @@ impl Forest {
         })
     }
 
-    fn spawn_sapling(&self, tree: &Tree) -> Option<Tree> {
-        let mut rng = rand::thread_rng();
+    fn spawn_sapling(&mut self, idx: usize) -> Option<Tree> {
+        let tree = self.trees.get(idx).unwrap();
         let chance = tree.get_spawn_chance();
-        let choice = rng.gen_range(0..100);
+        let choice = self.random.next() as u32 % 100;
 
         if choice <= chance {
             let mut adjacent_positions = GridUtils::get_adjacent_positions(
                 tree.position, self.width, self.height);
 
-            adjacent_positions.shuffle(&mut rng);
+            self.random.shuffle(&mut adjacent_positions);
 
             for position in adjacent_positions {
                 let idx = GridUtils::to_index(position.x, position.y, self.width);
@@ -139,6 +118,12 @@ impl Forest {
         None
     }
 
+    pub fn setup(&mut self) {
+        self.create_bear_entities(self.width * self.height);
+        self.create_lumberjack_entities(self.width * self.height);
+        self.create_tree_entities(self.width * self.height);
+    }
+
     pub fn update(&mut self) {
         self.months_elapsed += 1;
 
@@ -151,7 +136,7 @@ impl Forest {
                 .map(|l| (l.position, true)).collect::<Vec<(usize, bool)>>());
 
             let bear = self.bears.get_mut(idx).unwrap();
-            bear.wander(self.width, self.height, &occupied_positions);
+            bear.wander(&mut self.random, self.width, self.height, &occupied_positions);
         }
 
         for bear in self.bears.iter() {
@@ -172,7 +157,7 @@ impl Forest {
                 .map(|t| (t.position, true)).collect::<Vec<(usize, bool)>>());
 
             let lumberjack = self.lumberjacks.get_mut(idx).unwrap();
-            lumberjack.wander(self.width, self.height, &occupied_positions);
+            lumberjack.wander(&mut self.random, self.width, self.height, &occupied_positions);
         }
 
         for lumberjack in self.lumberjacks.iter() {
@@ -191,14 +176,10 @@ impl Forest {
             tree.grow();
         }
 
-        let mut saplings = vec![];
-        for tree in self.trees.iter() {
-            saplings.push(self.spawn_sapling(tree));
-        }
-
-        for sapling in saplings {
-            if let Some(sap) = sapling {
-                self.trees.push(sap);
+        for idx in 0..self.trees.len() {
+            match self.spawn_sapling(idx) {
+                Some(t) => self.trees.push(t),
+                None => continue
             }
         }
 
@@ -215,7 +196,7 @@ impl Forest {
                 let grid_size = self.width * self.height;
 
                 for _ in 0..new_lumberjacks {
-                    match Forest::get_open_space(grid_size, self.lumberjacks.clone()) {
+                    match GridUtils::get_open_space(&mut self.random, grid_size, &self.lumberjacks) {
                         Some(idx) => self.lumberjacks.push(Lumberjack::new(idx)),
                         None      => continue
                     }
@@ -224,8 +205,7 @@ impl Forest {
                 if self.lumberjacks.len() > 1 {
                     println!("Murdering a lumberjack.");
 
-                    let lumberjack = self.lumberjacks.choose(&mut rand::thread_rng());
-
+                    let lumberjack = self.random.choose(&self.lumberjacks);
                     if let Some(lj) = lumberjack {
                         let idx = self.lumberjacks.iter()
                             .position(|l| l.position == lj.position).unwrap();
@@ -242,14 +222,13 @@ impl Forest {
 
                 let grid_size = self.width * self.height;
 
-                if let Some(idx) = Forest::get_open_space(grid_size, self.bears.clone()) {
+                if let Some(idx) = GridUtils::get_open_space(&mut self.random, grid_size, &self.bears) {
                     self.bears.push(Bear::new(idx));
                 }
             } else {
                 println!("Murdering a bear.");
 
-                let bear = self.bears.choose(&mut rand::thread_rng());
-
+                let bear = self.random.choose(&self.bears);
                 if let Some(br) = bear {
                     let idx = self.bears.iter()
                         .position(|b| b.position == br.position).unwrap();
