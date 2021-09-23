@@ -25,8 +25,8 @@ impl Forest {
     pub const STARTING_LUMBERJACKS: f32 = 0.10;
     pub const STARTING_BEARS: f32 = 0.02;
 
-    pub fn new(size: usize) -> Self {
-        let random = Random(1234567890);
+    pub fn new(seed: u64, size: usize) -> Self {
+        let random = Random(seed);
         let grid_size = size * size;
 
         let mut forest = Forest {
