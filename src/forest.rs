@@ -189,8 +189,6 @@ impl Forest {
             // Handle lumberjack event
 
             if self.yearly_lumber as usize > self.lumberjacks.len() {
-                println!("Conjuring a lumberjack.");
-
                 let excess_lumber = self.yearly_lumber as usize - self.lumberjacks.len();
                 let new_lumberjacks = excess_lumber / 10;
                 let grid_size = self.width * self.height;
@@ -203,8 +201,6 @@ impl Forest {
                 }
             } else {
                 if self.lumberjacks.len() > 1 {
-                    println!("Murdering a lumberjack.");
-
                     let lumberjack = self.random.choose(&self.lumberjacks);
                     if let Some(lj) = lumberjack {
                         let idx = self.lumberjacks.iter()
@@ -218,16 +214,12 @@ impl Forest {
             // Handle bear event
 
             if self.yearly_maulings as usize == 0 {
-                println!("Conjuring a bear.");
-
                 let grid_size = self.width * self.height;
 
                 if let Some(idx) = GridUtils::get_open_space(&mut self.random, grid_size, &self.bears) {
                     self.bears.push(Bear::new(idx));
                 }
             } else {
-                println!("Murdering a bear.");
-
                 let bear = self.random.choose(&self.bears);
                 if let Some(br) = bear {
                     let idx = self.bears.iter()
