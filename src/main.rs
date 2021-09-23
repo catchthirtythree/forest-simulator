@@ -14,16 +14,18 @@ use crate::forest::Forest;
 use rand::RngCore;
 use std::env;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     const DEFAULT_SIZE: usize = 12;
     const DEFAULT_MONTHS: u32 = 4800;
 
     let args: Vec<String> = env::args().collect();
+    let s = args[1].parse::<u32>()?;
+
     let (seed, size, total_months): (u64, usize, u32) = match args.len() {
         1 => (rand::thread_rng().next_u64(), DEFAULT_SIZE, DEFAULT_MONTHS),
-        2 => (args[1].parse().unwrap(), DEFAULT_SIZE, DEFAULT_MONTHS),
-        3 => (args[1].parse().unwrap(), args[2].parse().unwrap(), DEFAULT_MONTHS),
-        _ => (args[1].parse().unwrap(), args[2].parse().unwrap(), args[3].parse().unwrap()),
+        2 => (args[1].parse()?, DEFAULT_SIZE, DEFAULT_MONTHS),
+        3 => (args[1].parse()?, args[2].parse()?, DEFAULT_MONTHS),
+        _ => (args[1].parse()?, args[2].parse()?, args[3].parse()?),
     };
 
     let mut forest = Forest::new(seed, size);
@@ -37,4 +39,6 @@ fn main() {
 
         std::thread::sleep(std::time::Duration::from_millis(500));
     }
+
+    Ok(())
 }
