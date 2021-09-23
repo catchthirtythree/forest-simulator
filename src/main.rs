@@ -15,11 +15,14 @@ use rand::RngCore;
 use std::env;
 
 fn main() {
+    const DEFAULT_SIZE: usize = 12;
+    const DEFAULT_MONTHS: u32 = 4800;
+
     let args: Vec<String> = env::args().collect();
     let (seed, size, total_months): (u64, usize, u32) = match args.len() {
-        1 => (rand::thread_rng().next_u64(), 10, 4800),
-        2 => (args[1].parse().unwrap(), 10, 4800),
-        3 => (args[1].parse().unwrap(), args[2].parse().unwrap(), 4800),
+        1 => (rand::thread_rng().next_u64(), DEFAULT_SIZE, DEFAULT_MONTHS),
+        2 => (args[1].parse().unwrap(), DEFAULT_SIZE, DEFAULT_MONTHS),
+        3 => (args[1].parse().unwrap(), args[2].parse().unwrap(), DEFAULT_MONTHS),
         _ => (args[1].parse().unwrap(), args[2].parse().unwrap(), args[3].parse().unwrap()),
     };
 
