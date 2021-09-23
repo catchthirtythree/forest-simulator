@@ -14,13 +14,26 @@ use crate::forest::Forest;
 use rand::RngCore;
 use std::env;
 
+struct ForestConfig {
+    seed: u64,
+    width: usize,
+    height: usize,
+    months: u32,
+}
+
+impl ForestConfig {
+    fn new(seed: u64, width: usize, height: usize, months: u32) -> Self {
+        Self { seed, width, height, months }
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
-    let (seed, width, height, total_months) = parse_arguments(&args)?;
+    let config = parse_arguments(&args)?;
 
-    let mut forest = Forest::new(seed, width, height);
+    let mut forest = Forest::new(config.seed, config.width, config.height);
 
-    while forest.months_elapsed != total_months {
+    while forest.months_elapsed != config.months {
         print!("\x1B[2J\x1B[1;1H");
 
         forest.update();
@@ -40,16 +53,33 @@ fn format_time(forest: &Forest) -> String {
     format!("year {}, month {}", years, months)
 }
 
-fn parse_arguments(args: &Vec<String>) -> Result<(u64, usize, usize, u32), Box<dyn std::error::Error>> {
+fn parse_arguments(args: &Vec<String>) -> Result<ForestConfig, Box<dyn std::error::Error>> {
     const DEFAULT_WIDTH: usize = 12;
     const DEFAULT_HEIGHT: usize = 8;
     const DEFAULT_MONTHS: u32 = 4800;
 
-    match args.len() {
-        1 => Ok((rand::thread_rng().next_u64(), DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_MONTHS)),
-        2 => Ok((args[1].parse()?, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_MONTHS)),
-        3 => Ok((args[1].parse()?, args[2].parse()?, args[2].parse::<usize>()? / 16 * 9, DEFAULT_MONTHS)),
-        4 => Ok((args[1].parse()?, args[2].parse()?, args[3].parse()?, DEFAULT_MONTHS)),
-        _ => Ok((args[1].parse()?, args[2].parse()?, args[3].parse()?, args[4].parse()?)),
-    }
+    let mut iter = args.iter();
+    let _ = iter.next();
+
+    let seed: u64 = match iter.next() {
+        Some(seed) => seed.parse()?,
+        None       => rand::thread_rng().next_u64()
+    };
+
+    let width: usize = match iter.next() {
+        Some(width) => width.parse()?,
+        None        => DEFAULT_WIDTH
+    };
+
+    let height: usize = match iter.next() {
+        Some(height) => height.parse()?,
+        None         => (width as f32 / 16. * 9.) as usize
+    };
+
+    let months: u32 = match iter.next() {
+        Some(months) => months.parse()?,
+        None         => DEFAULT_MONTHS
+    };
+
+    Ok(ForestConfig::new(seed, width, height, months))
 }
