@@ -25,14 +25,12 @@ impl Forest {
     pub const STARTING_LUMBERJACKS: f32 = 0.10;
     pub const STARTING_BEARS: f32 = 0.02;
 
-    pub fn new(seed: u64, size: usize) -> Self {
+    pub fn new(seed: u64, width: usize, height: usize) -> Self {
         let random = Random(seed);
-        let grid_size = size * size;
-
         let mut forest = Forest {
             random,
-            width: size,
-            height: size,
+            width,
+            height,
             bears: vec![],
             lumberjacks: vec![],
             trees: vec![],
@@ -42,7 +40,6 @@ impl Forest {
         };
 
         forest.setup();
-
         forest
     }
 
