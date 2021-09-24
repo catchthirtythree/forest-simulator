@@ -7,6 +7,12 @@ pub enum EntityType {
     Tree
 }
 
+pub enum WanderResult {
+    Wandered,
+    Mauled(usize),
+    Harvested(usize),
+}
+
 pub trait Entity {
     fn get_entity_type(&self) -> EntityType;
     fn get_position(&self) -> usize;

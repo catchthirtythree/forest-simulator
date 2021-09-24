@@ -1,4 +1,4 @@
-use crate::entity::{Entity};
+use crate::entity::{Entity, WanderResult};
 use crate::bear::Bear;
 use crate::lumberjack::Lumberjack;
 use crate::tree::{Tree, TreeKind};
@@ -124,46 +124,44 @@ impl Forest {
     pub fn update(&mut self) {
         self.months_elapsed += 1;
 
-        // Handle bear update logic
+        // Handle bear wander and maulings
 
         for idx in 0..self.bears.len() {
-            let mut occupied_positions = self.bears.iter()
-                .map(|b| (b.position, false)).collect::<Vec<(usize, bool)>>();
-            occupied_positions.append(&mut self.lumberjacks.iter()
-                .map(|l| (l.position, true)).collect::<Vec<(usize, bool)>>());
-
+            let bear_positions = self.bears
+                .iter().map(|b| b.position).collect::<Vec<usize>>();
+            let lumberjack_positions = self.lumberjacks
+                .iter().map(|l| l.position).collect::<Vec<usize>>();
             let bear = self.bears.get_mut(idx).unwrap();
-            bear.wander(&mut self.random, self.width, self.height, &occupied_positions);
-        }
 
-        for bear in self.bears.iter() {
-            let mauled_lumberjack = self.maul_lumberjack(bear, &self.lumberjacks);
+            let result = bear.wander(&mut self.random,
+                self.width, self.height, bear_positions, lumberjack_positions);
 
-            if let Some(idx) = mauled_lumberjack {
+            if let WanderResult::Mauled(idx) = result {
+                let position = self.lumberjacks
+                    .iter().position(|l| l.position == idx).unwrap();
+                self.lumberjacks.remove(position);
                 self.yearly_maulings += 1;
-                self.lumberjacks.remove(idx);
             }
         }
 
-        // Handle lumberjack update logic
+        // Handle lumberjack wander and harvests
 
         for idx in 0..self.lumberjacks.len() {
-            let mut occupied_positions = self.lumberjacks.iter()
-                .map(|l| (l.position, false)).collect::<Vec<(usize, bool)>>();
-            occupied_positions.append(&mut self.trees.iter()
-                .map(|t| (t.position, true)).collect::<Vec<(usize, bool)>>());
-
+            let lumberjack_positions = self.lumberjacks
+                .iter().map(|l| l.position).collect::<Vec<usize>>();
+            let tree_positions = self.trees
+                .iter().map(|t| t.position).collect::<Vec<usize>>();
             let lumberjack = self.lumberjacks.get_mut(idx).unwrap();
-            lumberjack.wander(&mut self.random, self.width, self.height, &occupied_positions);
-        }
 
-        for lumberjack in self.lumberjacks.iter() {
-            let harvested_tree = self.harvest_tree(lumberjack, &self.trees);
+            let result = lumberjack.wander(&mut self.random,
+                self.width, self.height, lumberjack_positions, tree_positions);
 
-            if let Some(idx) = harvested_tree {
-                let tree = self.trees.get(idx).unwrap();
+            if let WanderResult::Harvested(idx) = result {
+                let position = self.trees
+                    .iter().position(|t| t.position == idx).unwrap();
+                let tree = self.trees.get(position).unwrap();
                 self.yearly_lumber += tree.get_harvest_amount();
-                self.trees.remove(idx);
+                self.trees.remove(position);
             }
         }
 

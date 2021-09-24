@@ -1,4 +1,4 @@
-use crate::entity::{Entity, EntityType};
+use crate::entity::{Entity, EntityType, WanderResult};
 use crate::grid::GridUtils;
 use crate::random::Random;
 
@@ -8,6 +8,9 @@ pub struct Lumberjack {
 }
 
 impl Lumberjack {
+    const WANDERS_PER_MONTH: usize = 3;
+    const WANDER_ATTEMPTS: u32 = 2;
+
     pub fn new(position: usize) -> Self {
         Self {
             position,
@@ -19,39 +22,42 @@ impl Lumberjack {
         random: &mut Random,
         width: usize,
         height: usize,
-        occupied_positions: &Vec<(usize, bool)>
-    ) {
+        lumberjack_positions: Vec<usize>,
+        tree_positions: Vec<usize>,
+    ) -> WanderResult {
         let grid_size = width * height;
-
         let mut wanders = 0;
-        let mut attempts = 0;
+        let mut wander_attempts = 0;
 
-        while wanders < 3 {
-            attempts += 1;
+        while wanders < Lumberjack::WANDERS_PER_MONTH {
+            let adjacent_positions = GridUtils::get_adjacent_positions(
+                self.position, width, height);
+            let position = random.choose(&adjacent_positions).unwrap();
+            let position = GridUtils::to_index(position.x, position.y, width);
 
-            let adjacent_positions = GridUtils::get_adjacent_positions(self.position, width, height);
-            let picked_position = random.choose(&adjacent_positions).unwrap();
-            let picked_idx = GridUtils::to_index(picked_position.x, picked_position.y, width);
-            let position = occupied_positions.iter().find(|op| op.0 == picked_idx);
+            // Check if the lumberjack landed on another lumberjack
+            if lumberjack_positions.iter().any(|&pos| pos == position) {
+                wander_attempts += 1;
 
-            match position {
-                Some(pos) => {
-                    if pos.1 {
-                        self.position = picked_idx;
-                        break;
-                    }
-                },
-
-                None => {
-                    self.position = picked_idx;
-                    wanders += 1;
-                    attempts = 0;
+                if wander_attempts == Lumberjack::WANDER_ATTEMPTS {
+                    return WanderResult::Wandered;
                 }
+
+                continue;
             }
-            if attempts == 2 {
-                break;
+
+            // Check if lumberjack harvested a tree
+            if tree_positions.iter().any(|&pos| pos == position) {
+                self.position = position;
+                return WanderResult::Harvested(position);
             }
+
+            self.position = position;
+            wanders += 1;
+            wander_attempts = 0;
         }
+
+        return WanderResult::Wandered;
     }
 }
 

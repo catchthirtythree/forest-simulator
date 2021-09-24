@@ -13,6 +13,7 @@ use crate::forest::Forest;
 
 use rand::RngCore;
 use std::env;
+use std::time::{Instant};
 
 struct ForestConfig {
     seed: u64,
@@ -28,20 +29,27 @@ impl ForestConfig {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let start_time = Instant::now();
+
     let args: Vec<String> = env::args().collect();
     let config = parse_arguments(&args)?;
 
     let mut forest = Forest::new(config.seed, config.width, config.height);
 
     while forest.months_elapsed != config.months {
-        print!("\x1B[2J\x1B[1;1H");
+        // print!("\x1B[2J\x1B[1;1H");
 
         forest.update();
 
-        println!("{}\n{}", forest, format_time(&forest));
+        // println!("{}\n{}", forest, format_time(&forest));
 
-        std::thread::sleep(std::time::Duration::from_millis(500));
+        // std::thread::sleep(std::time::Duration::from_millis(500));
     }
+
+    let end_time = Instant::now() - start_time;
+
+    println!("Time to run: {:?}", end_time);
+    println!("{}", forest);
 
     Ok(())
 }
@@ -53,7 +61,9 @@ fn format_time(forest: &Forest) -> String {
     format!("year {}, month {}", years, months)
 }
 
-fn parse_arguments(args: &Vec<String>) -> Result<ForestConfig, Box<dyn std::error::Error>> {
+fn parse_arguments(
+    args: &Vec<String>
+) -> Result<ForestConfig, Box<dyn std::error::Error>> {
     const DEFAULT_WIDTH: usize = 12;
     const DEFAULT_HEIGHT: usize = 8;
     const DEFAULT_MONTHS: u32 = 4800;
