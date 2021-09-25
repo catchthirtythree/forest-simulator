@@ -167,16 +167,16 @@ impl Forest {
 
         // Handle tree update logic
 
-        for tree in self.trees.iter_mut() {
-            tree.grow();
-        }
-
+        let mut saplings = vec![];
         for idx in 0..self.trees.len() {
-            match self.spawn_sapling(idx) {
-                Some(t) => self.trees.push(t),
-                None => continue
+            self.trees.get_mut(idx).unwrap().grow();
+
+            if let Some(sapling) = self.spawn_sapling(idx) {
+                saplings.push(sapling);
             }
         }
+
+        self.trees.append(&mut saplings);
 
         // Handle yearly events
 
