@@ -1,21 +1,30 @@
-pub struct Random(pub u64);
+pub struct Random {
+    seed: u64,
+}
 
 impl Random {
-    pub fn next(&mut self) -> u64 {
-        let next = self.0;
+    pub fn new(seed: u64) -> Self {
+        Self { seed }
+    }
 
-        self.0 ^= self.0 << 3;
-        self.0 ^= self.0 >> 13;
-        self.0 ^= self.0 << 37;
+    pub fn next(&mut self) -> u64 {
+        let next = self.seed;
+
+        self.seed ^= self.seed << 3;
+        self.seed ^= self.seed >> 13;
+        self.seed ^= self.seed << 37;
 
         next
     }
 
-    pub fn choose<'a, T>(&mut self, list: &'a Vec<T>) -> Option<&'a T> {
-        let next = self.next() as usize;
-        let idx = next % list.len();
-
-        list.get(idx)
+    pub fn choose<T: Copy>(&mut self, list: &Vec<T>) -> Option<T> {
+        if !list.is_empty() {
+            let next = self.next() as usize;
+            let idx = next % list.len();
+            Some(list[idx])
+        } else {
+            None
+        }
     }
 
     pub fn shuffle<'a, T>(&mut self, list: &'a mut Vec<T>) -> &'a Vec<T> {
