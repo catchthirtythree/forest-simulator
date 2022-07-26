@@ -33,6 +33,8 @@ const SAPLING_HARVEST_CHANCE: u32 = 99;
 const MATURE_HARVEST_CHANCE: u32 = 75;
 const ELDER_HARVEST_CHANCE: u32 = 66;
 
+const JACK_MAX_LEVEL: u32 = 5;
+
 const SAPLING_GROW_AGE: u32 = 12;
 const MATURE_GROW_AGE: u32 = 120;
 
@@ -97,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         trigger_jack_event(&mut rng, &mut map, &config, &mut yearly_lumber);
         trigger_bear_event(&mut rng, &mut map, &config, &mut yearly_mauls);
 
-        if months_elapsed % 12 != 0 {
+        if months_elapsed % 12 == 0 {
             trigger_yearly_events(&mut rng, &mut map, &mut yearly_lumber, &mut yearly_mauls);
         }
     }
@@ -105,6 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     draw_map(&map, config.width);
+    draw_info(&map, months_elapsed);
 
     let end_time = Instant::now() - start_time;
     println!("Time to run: {:?}", end_time);
@@ -201,14 +204,14 @@ fn draw_map(map: &[u32], width: usize) {
         match (((cell & BEAR_MASK) >> BEAR_SHIFT), ((cell & JACK_MASK) >> JACK_SHIFT), get_tree_kind(cell)) {
             (0, 0, TreeKind::None)    => print!("."),
             (1, 0, TreeKind::None)    => print!("B"),
-            (0, 1, TreeKind::None)    => print!("@"),
+            (0, _, TreeKind::None)    => print!("@"),
             (0, 0, TreeKind::Sapling) => print!("t"),
             (0, 0, TreeKind::Mature)  => print!("T"),
             (0, 0, TreeKind::Elder)   => print!("E"),
-            (1, 1, TreeKind::None)    => print!("3"),
+            (1, _, TreeKind::None)    => print!("3"),
             (1, 0, _)                 => print!("4"),
-            (0, 1, _)                 => print!("5"),
-            (1, 1, _)                 => print!("6"),
+            (0, _, _)                 => print!("5"),
+            (1, _, _)                 => print!("6"),
             (_, _, _)                 => print!("?"),
         }
     }
@@ -332,7 +335,7 @@ fn trigger_jack_event(rng: &mut Random, map: &mut [u32], config: &ForestConfig, 
             let mut position_candidates: Vec<&usize> = adjacent_positions.iter()
                 .filter(|&position| {
                     let cell = map[*position];
-                    ((cell & JACK_MASK) >> JACK_SHIFT) == 0
+                    (cell & JACK_MASK) == 0
                 }).collect();
 
             if position_candidates.len() == 0 {
@@ -341,22 +344,23 @@ fn trigger_jack_event(rng: &mut Random, map: &mut [u32], config: &ForestConfig, 
 
             while wander_attempts < JACK_WANDER_ATTEMPTS && !has_wandered {
                 match rng.choose(&mut position_candidates) {
-                    Some(&choice) => {
+                    Some(&next_position) => {
                         remove_entity(map, current_position, JACK_REMOVE_MASK);
-                        place_entity(map, choice, JACK_SHIFT);
+                        place_entity(map, next_position, JACK_SHIFT);
 
-                        let chosen_cell = map[choice];
+                        let chosen_cell = map[next_position];
                         if (chosen_cell & TREE_MASK) > 0 {
                             let result = rng.next() as u32 % 100;
                             if result < get_tree_harvest_chance(chosen_cell) {
                                 let harvest_amount = get_harvest_amount(chosen_cell);
                                 *lumber += harvest_amount;
-                                remove_entity(map, choice, TREE_REMOVE_MASK);
+                                remove_entity(map, next_position, TREE_REMOVE_MASK);
+                                level_up_jack(map, next_position, harvest_amount);
                             } else {
-                                // @TODO(michael): Add lumber harvested to jacks for protection against bears.
-                                let harvest_amount = get_harvest_amount(chosen_cell) / 2;
-                                *lumber += harvest_amount;
-                                de_age_tree(map, choice, chosen_cell);
+                                // let harvest_amount = get_harvest_amount(chosen_cell) / 2;
+                                // *lumber += harvest_amount;
+                                de_age_tree(map, next_position);
+                                // level_up_jack(map, next_position, harvest_amount);
                             }
 
                             wanders = JACK_WANDERS_PER_MONTH;
@@ -364,7 +368,7 @@ fn trigger_jack_event(rng: &mut Random, map: &mut [u32], config: &ForestConfig, 
                             wanders += 1;
                         }
 
-                        current_position = choice;
+                        current_position = next_position;
                         has_wandered = true;
                     },
                     None => {
@@ -389,7 +393,9 @@ fn get_tree_harvest_chance(cell: u32) -> u32 {
     }
 }
 
-fn de_age_tree(map: &mut [u32], index: usize, cell: u32) {
+fn de_age_tree(map: &mut [u32], index: usize) {
+    let cell = map[index];
+
     match get_tree_kind(cell) {
         TreeKind::Sapling => {
             map[index] -= (cell & TREE_MASK) - 1;
@@ -401,6 +407,17 @@ fn de_age_tree(map: &mut [u32], index: usize, cell: u32) {
             map[index] -= (cell & TREE_MASK) - MATURE_GROW_AGE;
         },
         TreeKind::None    => return,
+    }
+}
+
+fn level_up_jack(map: &mut [u32], index: usize, lumber: u32) {
+    let cell = map[index];
+    let level = (cell & JACK_MASK) >> JACK_SHIFT;
+
+    if level <= JACK_MAX_LEVEL {
+        let level = u32::min(level + lumber, JACK_MAX_LEVEL);
+        map[index] &= JACK_REMOVE_MASK;
+        map[index] += level << JACK_SHIFT;
     }
 }
 
@@ -431,7 +448,7 @@ fn trigger_bear_event(rng: &mut Random, map: &mut [u32], config: &ForestConfig, 
             let mut position_candidates: Vec<&usize> = adjacent_positions.iter()
                 .filter(|&position| {
                     let cell = map[*position];
-                    ((cell & BEAR_MASK) >> BEAR_SHIFT) == 0
+                    (cell & BEAR_MASK) == 0
                 }).collect();
 
             if position_candidates.len() == 0 {
@@ -440,34 +457,53 @@ fn trigger_bear_event(rng: &mut Random, map: &mut [u32], config: &ForestConfig, 
 
             while wander_attempts < BEAR_WANDER_ATTEMPTS && !has_wandered {
                 match rng.choose(&mut position_candidates) {
-                    Some(&choice) => {
+                    Some(&next_position) => {
                         remove_entity(map, current_position, BEAR_REMOVE_MASK);
-                        place_entity(map, choice, BEAR_SHIFT);
+                        place_entity(map, next_position, BEAR_SHIFT);
 
-                        let chosen_cell = map[choice];
-                        if ((chosen_cell & JACK_MASK) >> JACK_SHIFT) > 0 {
-                            // @TODO(michael): Add chance to maul jack depending on lumber got?
-                            *mauls += get_harvest_amount(chosen_cell);
-                            remove_entity(map, choice, JACK_REMOVE_MASK);
+                        let chosen_cell = map[next_position];
+                        if (chosen_cell & JACK_MASK) > 0 {
+                            let result = rng.next() as u32 % 100;
+                            if result < get_jack_maul_chance(chosen_cell) {
+                                *mauls += 1;
+                                remove_entity(map, next_position, JACK_REMOVE_MASK);
+                            } else {
+                                de_level_jack(map, next_position);
+                            }
+
                             wanders = BEAR_WANDERS_PER_MONTH;
                         } else {
                             wanders += 1;
                         }
 
-                        current_position = choice;
+                        current_position = next_position;
                         has_wandered = true;
                     },
                     None => {
                         wander_attempts += 1;
                     }
                 }
-
             }
 
             if !has_wandered {
                 break;
             }
         }
+    }
+}
+
+fn get_jack_maul_chance(cell: u32) -> u32 {
+    let level = (cell & JACK_MASK) >> JACK_SHIFT;
+    100 - (level * 10)
+}
+
+fn de_level_jack(map: &mut [u32], index: usize) {
+    let cell = map[index];
+    let level = cell & JACK_MASK;
+
+    if level > 1 {
+        map[index] &= JACK_REMOVE_MASK;
+        map[index] += (level - 1) << JACK_SHIFT;
     }
 }
 
@@ -521,4 +557,38 @@ fn get_open_space(rng: &mut Random, map: &[u32]) -> Option<usize> {
         spaces.push(i);
     }
     rng.choose(&spaces)
+}
+
+fn draw_info(map: &[u32], months_elapsed: u32) {
+    println!("{} | {}", get_formatted_time(months_elapsed), get_formatted_entities(map))
+}
+
+fn get_formatted_time(months_elapsed: u32) -> String {
+    let years: u32 = months_elapsed / 12;
+    let months: u32 = months_elapsed % 12;
+    format!("year {}, month {}", years, months)
+}
+
+fn get_formatted_entities(map: &[u32]) -> String {
+    let mut num_bears = 0;
+    let mut num_jacks = 0;
+    let mut num_trees = 0;
+
+    for i in 0..map.len() {
+        let cell = map[i];
+
+        if (cell & BEAR_MASK) > 0 {
+            num_bears += 1;
+        }
+
+        if (cell & JACK_MASK) > 0 {
+            num_jacks += 1;
+        }
+
+        if (cell & TREE_MASK) > 0 {
+            num_trees += 1;
+        }
+    }
+
+    format!("bears {}, jacks {}, trees {}", num_bears, num_jacks, num_trees)
 }
