@@ -21,9 +21,9 @@ const BEAR_REMOVE_MASK: u32 = 0x0FFF;
 const JACK_REMOVE_MASK: u32 = 0xF0FF;
 const TREE_REMOVE_MASK: u32 = 0xFF00;
 
-const BEAR_SHIFT: u32 = 12;
-const JACK_SHIFT: u32 = 8;
-const TREE_SHIFT: u32 = 1;
+const BEAR_SHIFT: u32 = 4 * 3;
+const JACK_SHIFT: u32 = 4 * 2;
+const TREE_SHIFT: u32 = 4 * 0;
 
 const SAPLING_SPAWN_CHANCE: u32 = 0;
 const MATURE_SPAWN_CHANCE: u32 = 10;
