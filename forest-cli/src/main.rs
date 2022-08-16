@@ -1,6 +1,10 @@
-use std::{time::Instant, env};
-use forest_lib::{forest::{Forest, BEAR_MASK, JACK_MASK, TREE_MASK}, forest_config::ForestConfig};
+use forest_lib::{
+    config::ForestConfig,
+    consts::{BEAR_MASK, JACK_MASK, TREE_MASK},
+    forest::Forest,
+};
 use rand::RngCore;
+use std::{env, time::Instant};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start_time = Instant::now();
