@@ -169,28 +169,28 @@ pub mod forest {
             }
         }
 
-        fn trigger_tree_event(rng: &mut Random, map: &mut [u32], width: usize, height: usize) {
-            let positions = Self::get_entity_positions(&map, TREE_MASK, TREE_SHIFT);
+        fn trigger_tree_event(&mut self) {
+            let positions = Self::get_entity_positions(&self.map, TREE_MASK, TREE_SHIFT);
             for i in positions {
-                let cell = map[i];
+                let cell = self.map[i];
 
-                Self::age_tree(map, i, cell);
+                Self::age_tree(&mut self.map, i, cell);
 
                 let spawn_chance = Self::get_sapling_spawn_chance(cell);
-                let result = rng.next() as u32 % 100;
+                let result = self.rng.next() as u32 % 100;
 
                 if result <= spawn_chance {
-                    let adjacent_positions = Self::get_adjacent_positions(i, width, height);
+                    let adjacent_positions = self.get_adjacent_positions(i);
                     let mut position_candidates = adjacent_positions
                         .iter()
                         .filter(|&position| {
-                            let cell = map[*position];
+                            let cell = self.map[*position];
                             cell & TREE_MASK == 0
                         })
                         .collect();
 
-                    if let Some(&choice) = rng.choose(&mut position_candidates) {
-                        Self::place_entity(map, choice, TREE_SHIFT)
+                    if let Some(&choice) = self.rng.choose(&mut position_candidates) {
+                        Self::place_entity(&mut self.map, choice, TREE_SHIFT)
                     }
                 }
             }
@@ -210,7 +210,7 @@ pub mod forest {
                 .collect::<Vec<usize>>()
         }
 
-        fn get_adjacent_positions(index: usize, width: usize, height: usize) -> Vec<usize> {
+        fn get_adjacent_positions(&self, index: usize) -> Vec<usize> {
             let mut positions: Vec<usize> = vec![];
 
             let adjacent_movements: Vec<(isize, isize)> = vec![
@@ -224,8 +224,8 @@ pub mod forest {
                 (1, 1),
             ];
 
-            let x = (index % width) as usize;
-            let y = (index / width) as usize;
+            let x = (index % self.width) as usize;
+            let y = (index / self.width) as usize;
 
             for movement in adjacent_movements {
                 let x = x as isize + movement.0;
@@ -236,14 +236,14 @@ pub mod forest {
 
                 let x = x as usize;
                 let y = y as usize;
-                if x >= width || y >= height {
+                if x >= self.width || y >= self.height {
                     continue;
                 }
 
                 positions.push(Self::convert_position_to_index(
                     x as usize,
                     y as usize,
-                    width,
+                    self.width,
                 ));
             }
 
@@ -268,14 +268,8 @@ pub mod forest {
             }
         }
 
-        fn trigger_jack_event(
-            rng: &mut Random,
-            map: &mut [u32],
-            lumber: &mut u32,
-            width: usize,
-            height: usize,
-        ) {
-            let positions = Self::get_entity_positions(&map, JACK_MASK, JACK_SHIFT);
+        fn trigger_jack_event(&mut self) {
+            let positions = Self::get_entity_positions(&self.map, JACK_MASK, JACK_SHIFT);
             for i in positions {
                 let mut wanders = 0;
                 let mut current_position = i;
@@ -284,11 +278,11 @@ pub mod forest {
                     let mut has_wandered = false;
                     let mut wander_attempts = 0;
 
-                    let adjacent_positions = Self::get_adjacent_positions(current_position, width, height);
+                    let adjacent_positions = self.get_adjacent_positions(current_position);
                     let mut position_candidates: Vec<&usize> = adjacent_positions
                         .iter()
                         .filter(|&position| {
-                            let cell = map[*position];
+                            let cell = self.map[*position];
                             (cell & JACK_MASK) == 0
                         })
                         .collect();
@@ -298,23 +292,23 @@ pub mod forest {
                     }
 
                     while wander_attempts < JACK_WANDER_ATTEMPTS && !has_wandered {
-                        match rng.choose(&mut position_candidates) {
+                        match self.rng.choose(&mut position_candidates) {
                             Some(&next_position) => {
-                                Self::remove_entity(map, current_position, JACK_REMOVE_MASK);
-                                Self::place_entity(map, next_position, JACK_SHIFT);
+                                Self::remove_entity(&mut self.map, current_position, JACK_REMOVE_MASK);
+                                Self::place_entity(&mut self.map, next_position, JACK_SHIFT);
 
-                                let chosen_cell = map[next_position];
+                                let chosen_cell = self.map[next_position];
                                 if (chosen_cell & TREE_MASK) > 0 {
-                                    let result = rng.next() as u32 % 100;
+                                    let result = self.rng.next() as u32 % 100;
                                     if result < Self::get_tree_harvest_chance(chosen_cell) {
                                         let harvest_amount = Self::get_harvest_amount(chosen_cell);
-                                        *lumber += harvest_amount;
-                                        Self::remove_entity(map, next_position, TREE_REMOVE_MASK);
-                                        Self::level_up_jack(map, next_position, harvest_amount);
+                                        self.yearly_lumber += harvest_amount;
+                                        Self::remove_entity(&mut self.map, next_position, TREE_REMOVE_MASK);
+                                        Self::level_up_jack(&mut self.map, next_position, harvest_amount);
                                     } else {
                                         // let harvest_amount = Self::get_harvest_amount(chosen_cell) / 2;
-                                        // *lumber += harvest_amount;
-                                        Self::de_age_tree(map, next_position);
+                                        // self.yearly_lumber += harvest_amount;
+                                        Self::de_age_tree(&mut self.map, next_position);
                                         // Self::level_up_jack(map, next_position, harvest_amount);
                                     }
 
@@ -389,14 +383,8 @@ pub mod forest {
             }
         }
 
-        fn trigger_bear_event(
-            rng: &mut Random,
-            map: &mut [u32],
-            mauls: &mut u32,
-            width: usize,
-            height: usize,
-        ) {
-            let positions = Self::get_entity_positions(&map, BEAR_MASK, BEAR_SHIFT);
+        fn trigger_bear_event(&mut self) {
+            let positions = Self::get_entity_positions(&self.map, BEAR_MASK, BEAR_SHIFT);
             for i in positions {
                 let mut wanders = 0;
                 let mut current_position = i;
@@ -405,11 +393,11 @@ pub mod forest {
                     let mut has_wandered = false;
                     let mut wander_attempts = 0;
 
-                    let adjacent_positions = Self::get_adjacent_positions(current_position, width, height);
+                    let adjacent_positions = self.get_adjacent_positions(current_position);
                     let mut position_candidates: Vec<&usize> = adjacent_positions
                         .iter()
                         .filter(|&position| {
-                            let cell = map[*position];
+                            let cell = self.map[*position];
                             (cell & BEAR_MASK) == 0
                         })
                         .collect();
@@ -419,19 +407,19 @@ pub mod forest {
                     }
 
                     while wander_attempts < BEAR_WANDER_ATTEMPTS && !has_wandered {
-                        match rng.choose(&mut position_candidates) {
+                        match self.rng.choose(&mut position_candidates) {
                             Some(&next_position) => {
-                                Self::remove_entity(map, current_position, BEAR_REMOVE_MASK);
-                                Self::place_entity(map, next_position, BEAR_SHIFT);
+                                Self::remove_entity(&mut self.map, current_position, BEAR_REMOVE_MASK);
+                                Self::place_entity(&mut self.map, next_position, BEAR_SHIFT);
 
-                                let chosen_cell = map[next_position];
+                                let chosen_cell = self.map[next_position];
                                 if (chosen_cell & JACK_MASK) > 0 {
-                                    let result = rng.next() as u32 % 100;
+                                    let result = self.rng.next() as u32 % 100;
                                     if result < Self::get_jack_maul_chance(chosen_cell) {
-                                        *mauls += 1;
-                                        Self::remove_entity(map, next_position, JACK_REMOVE_MASK);
+                                        self.yearly_mauls += 1;
+                                        Self::remove_entity(&mut self.map, next_position, JACK_REMOVE_MASK);
                                     } else {
-                                        Self::de_level_jack(map, next_position);
+                                        Self::de_level_jack(&mut self.map, next_position);
                                     }
 
                                     wanders = BEAR_WANDERS_PER_MONTH;
@@ -470,44 +458,44 @@ pub mod forest {
             }
         }
 
-        fn trigger_yearly_events(rng: &mut Random, map: &mut [u32], lumber: &mut u32, mauls: &mut u32) {
+        fn trigger_yearly_events(&mut self) {
             {
-                let jacks = Self::get_entity_positions(&map, JACK_MASK, JACK_SHIFT);
-                if *lumber as usize > jacks.len() {
-                    let excess_lumber = *lumber as usize - jacks.len();
+                let jacks = Self::get_entity_positions(&self.map, JACK_MASK, JACK_SHIFT);
+                if self.yearly_lumber as usize > jacks.len() {
+                    let excess_lumber = self.yearly_lumber as usize - jacks.len();
                     let new_lumberjacks = excess_lumber / 10;
 
                     for _ in 0..new_lumberjacks {
-                        if let Some(index) = Self::get_open_space(rng, map) {
-                            Self::place_entity(map, index, JACK_SHIFT);
+                        if let Some(index) = Self::get_open_space(&mut self.rng, &mut self.map) {
+                            Self::place_entity(&mut self.map, index, JACK_SHIFT);
                         }
                     }
                 } else {
                     if jacks.len() > 1 {
-                        if let Some(index) = rng.choose(&jacks) {
-                            Self::remove_entity(map, index, JACK_REMOVE_MASK);
+                        if let Some(index) = self.rng.choose(&jacks) {
+                            Self::remove_entity(&mut self.map, index, JACK_REMOVE_MASK);
                         }
                     }
                 }
             }
 
             {
-                let bears = Self::get_entity_positions(&map, BEAR_MASK, BEAR_SHIFT);
-                if *mauls as usize == 0 {
-                    if let Some(index) = Self::get_open_space(rng, map) {
-                        Self::place_entity(map, index, BEAR_SHIFT);
+                let bears = Self::get_entity_positions(&self.map, BEAR_MASK, BEAR_SHIFT);
+                if self.yearly_mauls as usize == 0 {
+                    if let Some(index) = Self::get_open_space(&mut self.rng, &mut self.map) {
+                        Self::place_entity(&mut self.map, index, BEAR_SHIFT);
                     }
                 } else {
                     if bears.len() > 1 {
-                        if let Some(index) = rng.choose(&bears) {
-                            Self::remove_entity(map, index, BEAR_REMOVE_MASK);
+                        if let Some(index) = self.rng.choose(&bears) {
+                            Self::remove_entity(&mut self.map, index, BEAR_REMOVE_MASK);
                         }
                     }
                 }
             }
 
-            *lumber = 0;
-            *mauls = 0;
+            self.yearly_lumber = 0;
+            self.yearly_mauls = 0;
         }
 
         fn get_open_space(rng: &mut Random, map: &[u32]) -> Option<usize> {
@@ -525,29 +513,12 @@ pub mod forest {
         pub fn update(&mut self) {
             self.months_elapsed += 1;
 
-            Self::trigger_tree_event(&mut self.rng, &mut self.map, self.width, self.height);
-            Self::trigger_jack_event(
-                &mut self.rng,
-                &mut self.map,
-                &mut self.yearly_lumber,
-                self.width,
-                self.height,
-            );
-            Self::trigger_bear_event(
-                &mut self.rng,
-                &mut self.map,
-                &mut self.yearly_mauls,
-                self.width,
-                self.height,
-            );
+            self.trigger_tree_event();
+            self.trigger_jack_event();
+            self.trigger_bear_event();
 
             if self.months_elapsed % 12 == 0 {
-                Self::trigger_yearly_events(
-                    &mut self.rng,
-                    &mut self.map,
-                    &mut self.yearly_lumber,
-                    &mut self.yearly_mauls,
-                );
+                self.trigger_yearly_events();
             }
         }
     }
