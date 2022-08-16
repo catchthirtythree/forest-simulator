@@ -38,39 +38,16 @@ pub mod consts {
     pub const JACK_WANDER_ATTEMPTS: u32 = 2;
 }
 
-pub mod config {
-    pub struct ForestConfig {
-        pub seed: u64,
-        pub width: usize,
-        pub height: usize,
-        pub months: u32,
-    }
-
-    impl ForestConfig {
-        pub fn new(seed: u64, width: usize, height: usize, months: u32) -> Self {
-            Self {
-                seed,
-                width,
-                height,
-                months,
-            }
-        }
-    }
-}
-
 pub mod forest {
     use crate::random::Random;
 
-    use crate::{
-        config::ForestConfig,
-        consts::{
-            BEAR_MASK, BEAR_REMOVE_MASK, BEAR_SHIFT, BEAR_WANDERS_PER_MONTH, BEAR_WANDER_ATTEMPTS,
-            ELDER_HARVEST_CHANCE, ELDER_SPAWN_CHANCE, JACK_MASK, JACK_MAX_LEVEL, JACK_REMOVE_MASK,
-            JACK_SHIFT, JACK_WANDERS_PER_MONTH, JACK_WANDER_ATTEMPTS, MATURE_GROW_AGE,
-            MATURE_HARVEST_CHANCE, MATURE_SPAWN_CHANCE, NONE_MASK, SAPLING_GROW_AGE,
-            SAPLING_HARVEST_CHANCE, SAPLING_SPAWN_CHANCE, STARTING_BEARS, STARTING_JACKS,
-            STARTING_TREES, TREE_MASK, TREE_REMOVE_MASK, TREE_SHIFT,
-        },
+    use crate::consts::{
+        BEAR_MASK, BEAR_REMOVE_MASK, BEAR_SHIFT, BEAR_WANDERS_PER_MONTH, BEAR_WANDER_ATTEMPTS,
+        ELDER_HARVEST_CHANCE, ELDER_SPAWN_CHANCE, JACK_MASK, JACK_MAX_LEVEL, JACK_REMOVE_MASK,
+        JACK_SHIFT, JACK_WANDERS_PER_MONTH, JACK_WANDER_ATTEMPTS, MATURE_GROW_AGE,
+        MATURE_HARVEST_CHANCE, MATURE_SPAWN_CHANCE, NONE_MASK, SAPLING_GROW_AGE,
+        SAPLING_HARVEST_CHANCE, SAPLING_SPAWN_CHANCE, STARTING_BEARS, STARTING_JACKS,
+        STARTING_TREES, TREE_MASK, TREE_REMOVE_MASK, TREE_SHIFT,
     };
 
     enum TreeKind {
@@ -81,25 +58,27 @@ pub mod forest {
     }
 
     pub struct Forest {
-        pub config: ForestConfig,
         rng: Random,
         pub map: Vec<u32>,
+        width: usize,
+        height: usize,
         pub months_elapsed: u32,
         yearly_lumber: u32,
         yearly_mauls: u32,
     }
 
     impl Forest {
-        pub fn new(config: ForestConfig) -> Self {
-            let mut rng = Random::new(config.seed);
-            let mut map = vec![NONE_MASK; config.width * config.height];
+        pub fn new(seed: u64, width: usize, height: usize) -> Self {
+            let mut rng = Random::new(seed);
+            let mut map = vec![NONE_MASK; width * height];
 
             Self::initialize_map(&mut rng, &mut map);
 
             Self {
-                config,
                 rng,
                 map,
+                width,
+                height,
                 months_elapsed: 0,
                 yearly_lumber: 0,
                 yearly_mauls: 0,
@@ -147,7 +126,7 @@ pub mod forest {
 
         pub fn draw_map(&self) {
             for i in 0..self.map.len() {
-                if i > 0 && i % self.config.width == 0 {
+                if i > 0 && i % self.width == 0 {
                     println!();
                 }
 
@@ -190,7 +169,7 @@ pub mod forest {
             }
         }
 
-        fn trigger_tree_event(rng: &mut Random, map: &mut [u32], config: &ForestConfig) {
+        fn trigger_tree_event(rng: &mut Random, map: &mut [u32], width: usize, height: usize) {
             let positions = Self::get_entity_positions(&map, TREE_MASK, TREE_SHIFT);
             for i in positions {
                 let cell = map[i];
@@ -201,7 +180,7 @@ pub mod forest {
                 let result = rng.next() as u32 % 100;
 
                 if result <= spawn_chance {
-                    let adjacent_positions = Self::get_adjacent_positions(i, &config);
+                    let adjacent_positions = Self::get_adjacent_positions(i, width, height);
                     let mut position_candidates = adjacent_positions
                         .iter()
                         .filter(|&position| {
@@ -231,7 +210,7 @@ pub mod forest {
                 .collect::<Vec<usize>>()
         }
 
-        fn get_adjacent_positions(index: usize, config: &ForestConfig) -> Vec<usize> {
+        fn get_adjacent_positions(index: usize, width: usize, height: usize) -> Vec<usize> {
             let mut positions: Vec<usize> = vec![];
 
             let adjacent_movements: Vec<(isize, isize)> = vec![
@@ -245,8 +224,8 @@ pub mod forest {
                 (1, 1),
             ];
 
-            let x = (index % config.width) as usize;
-            let y = (index / config.width) as usize;
+            let x = (index % width) as usize;
+            let y = (index / width) as usize;
 
             for movement in adjacent_movements {
                 let x = x as isize + movement.0;
@@ -257,14 +236,14 @@ pub mod forest {
 
                 let x = x as usize;
                 let y = y as usize;
-                if x >= config.width || y >= config.height {
+                if x >= width || y >= height {
                     continue;
                 }
 
                 positions.push(Self::convert_position_to_index(
                     x as usize,
                     y as usize,
-                    config.width,
+                    width,
                 ));
             }
 
@@ -292,8 +271,9 @@ pub mod forest {
         fn trigger_jack_event(
             rng: &mut Random,
             map: &mut [u32],
-            config: &ForestConfig,
             lumber: &mut u32,
+            width: usize,
+            height: usize,
         ) {
             let positions = Self::get_entity_positions(&map, JACK_MASK, JACK_SHIFT);
             for i in positions {
@@ -304,7 +284,7 @@ pub mod forest {
                     let mut has_wandered = false;
                     let mut wander_attempts = 0;
 
-                    let adjacent_positions = Self::get_adjacent_positions(current_position, &config);
+                    let adjacent_positions = Self::get_adjacent_positions(current_position, width, height);
                     let mut position_candidates: Vec<&usize> = adjacent_positions
                         .iter()
                         .filter(|&position| {
@@ -412,8 +392,9 @@ pub mod forest {
         fn trigger_bear_event(
             rng: &mut Random,
             map: &mut [u32],
-            config: &ForestConfig,
             mauls: &mut u32,
+            width: usize,
+            height: usize,
         ) {
             let positions = Self::get_entity_positions(&map, BEAR_MASK, BEAR_SHIFT);
             for i in positions {
@@ -424,7 +405,7 @@ pub mod forest {
                     let mut has_wandered = false;
                     let mut wander_attempts = 0;
 
-                    let adjacent_positions = Self::get_adjacent_positions(current_position, &config);
+                    let adjacent_positions = Self::get_adjacent_positions(current_position, width, height);
                     let mut position_candidates: Vec<&usize> = adjacent_positions
                         .iter()
                         .filter(|&position| {
@@ -544,18 +525,20 @@ pub mod forest {
         pub fn update(&mut self) {
             self.months_elapsed += 1;
 
-            Self::trigger_tree_event(&mut self.rng, &mut self.map, &self.config);
+            Self::trigger_tree_event(&mut self.rng, &mut self.map, self.width, self.height);
             Self::trigger_jack_event(
                 &mut self.rng,
                 &mut self.map,
-                &self.config,
                 &mut self.yearly_lumber,
+                self.width,
+                self.height,
             );
             Self::trigger_bear_event(
                 &mut self.rng,
                 &mut self.map,
-                &self.config,
                 &mut self.yearly_mauls,
+                self.width,
+                self.height,
             );
 
             if self.months_elapsed % 12 == 0 {

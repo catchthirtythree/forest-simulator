@@ -1,10 +1,27 @@
 use forest_lib::{
-    config::ForestConfig,
     consts::{BEAR_MASK, JACK_MASK, TREE_MASK},
     forest::Forest,
 };
 use rand::RngCore;
 use std::{env, time::Instant};
+
+pub struct ForestConfig {
+    pub seed: u64,
+    pub width: usize,
+    pub height: usize,
+    pub months: u32,
+}
+
+impl ForestConfig {
+    pub fn new(seed: u64, width: usize, height: usize, months: u32) -> Self {
+        Self {
+            seed,
+            width,
+            height,
+            months,
+        }
+    }
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start_time = Instant::now();
@@ -12,11 +29,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let config = parse_arguments(&args)?;
 
-    let mut forest = Forest::new(config);
+    let mut forest = Forest::new(config.seed, config.width, config.height);
 
     forest.draw_map();
 
-    while forest.months_elapsed < forest.config.months {
+    while forest.months_elapsed < config.months {
         forest.update();
     }
 
