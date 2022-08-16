@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "forest-cli",
-    # "forest-gui/src-tauri",
+    "forest-gui/src-tauri",
     "forest-lib",
 ]
