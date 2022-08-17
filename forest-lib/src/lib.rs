@@ -461,7 +461,7 @@ pub mod forest {
 
         fn de_level_jack(map: &mut [u16], index: usize) {
             let cell = map[index];
-            let level = cell & JACK_MASK;
+            let level = (cell & JACK_MASK) >> JACK_SHIFT;
 
             if level > 1 {
                 map[index] &= JACK_REMOVE_MASK;
