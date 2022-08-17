@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useRef, useState } from 'react';
-import { get_map, update_map } from '../commands/map_commands';
+import { get_forest, update_forest } from '../commands/forest_commands';
 import './App.css';
 
 const DEFAULT_SEED: number = 123123;
@@ -37,15 +37,15 @@ export function calculate_cell_rgb(cell: number): [number, number, number] {
 }
 
 export function is_tree(cell: number): boolean {
-  return ((cell & 0xff) >> 4 * 0) > 0;
+  return ((cell & 0x0000ff) >> 4 * 0) > 0;
 }
 
 export function is_jack(cell: number): boolean {
-  return ((cell & 0xff) >> 4 * 2) > 0;
+  return ((cell & 0x00ff00) >> 4 * 2) > 0;
 }
 
 export function is_bear(cell: number): boolean {
-  return ((cell & 0xff) >> 4 * 3) > 0;
+  return ((cell & 0xff0000) >> 4 * 3) > 0;
 }
 
 export function App(props: {}): ReactElement<any, any> {
@@ -63,8 +63,7 @@ export function App(props: {}): ReactElement<any, any> {
     if (!ctx) return;
 
     let context = ctx;
-
-    // @TODO(michael): Draw the map on the canvas.
+    context.clearRect(0, 0, width, height);
 
     let image_data = context.getImageData(0, 0, width, height);
 
@@ -96,14 +95,14 @@ export function App(props: {}): ReactElement<any, any> {
 
       <div id="App_buttons">
         <button onClick={(event) => {
-          get_map().then(map => {
+          get_forest().then(map => {
             if (!map) return;
             setMap(map);
           });
         }}>Get the map</button>
 
         <button onClick={(event) => {
-          update_map().then(_ => get_map().then(map => {
+          update_forest().then(_ => get_forest().then(map => {
             if (!map) return;
             setMap(map);
           }));

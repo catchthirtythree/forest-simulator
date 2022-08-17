@@ -22,21 +22,22 @@ impl Default for AppState {
 }
 
 #[tauri::command]
-fn get_map(state: tauri::State<AppState>) -> Vec<u32> {
+fn get_forest(state: tauri::State<AppState>) -> Vec<u32> {
     state.forest.lock().unwrap().map.clone()
 }
 
 #[tauri::command]
-fn update(state: tauri::State<AppState>) {
-    state.forest.lock().unwrap().update();
+fn update_forest(state: tauri::State<AppState>) {
+    let mut forest = state.forest.lock().unwrap();
+    forest.update();
 }
 
 fn main() {
     tauri::Builder::default()
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
-            get_map,
-            update,
+            get_forest,
+            update_forest,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
