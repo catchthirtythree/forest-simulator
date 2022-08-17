@@ -75,7 +75,7 @@ fn parse_arguments(args: &Vec<String>) -> Result<ForestConfig, Box<dyn std::erro
     Ok(ForestConfig::new(seed, width, height, months))
 }
 
-fn draw_info(map: &[u32], months_elapsed: u32) {
+fn draw_info(map: &[u16], months_elapsed: u32) {
     println!(
         "{} | {}",
         get_formatted_time(months_elapsed),
@@ -89,7 +89,7 @@ fn get_formatted_time(months_elapsed: u32) -> String {
     format!("year {}, month {}", years, months)
 }
 
-fn get_formatted_entities(map: &[u32]) -> String {
+fn get_formatted_entities(map: &[u16]) -> String {
     let mut num_bears = 0;
     let mut num_jacks = 0;
     let mut num_trees = 0;

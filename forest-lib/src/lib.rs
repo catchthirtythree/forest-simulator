@@ -5,18 +5,18 @@ pub mod consts {
     pub const STARTING_JACKS: f32 = 0.10;
     pub const STARTING_BEARS: f32 = 0.02;
 
-    pub const NONE_MASK: u32 = 0x0000;
-    pub const BEAR_MASK: u32 = 0xF000;
-    pub const JACK_MASK: u32 = 0x0F00;
-    pub const TREE_MASK: u32 = 0x00FF;
+    pub const NONE_MASK: u16 = 0x0000;
+    pub const BEAR_MASK: u16 = 0xF000;
+    pub const JACK_MASK: u16 = 0x0F00;
+    pub const TREE_MASK: u16 = 0x00FF;
 
-    pub const BEAR_REMOVE_MASK: u32 = 0x0FFF;
-    pub const JACK_REMOVE_MASK: u32 = 0xF0FF;
-    pub const TREE_REMOVE_MASK: u32 = 0xFF00;
+    pub const BEAR_REMOVE_MASK: u16 = 0x0FFF;
+    pub const JACK_REMOVE_MASK: u16 = 0xF0FF;
+    pub const TREE_REMOVE_MASK: u16 = 0xFF00;
 
-    pub const BEAR_SHIFT: u32 = 4 * 3;
-    pub const JACK_SHIFT: u32 = 4 * 2;
-    pub const TREE_SHIFT: u32 = 4 * 0;
+    pub const BEAR_SHIFT: u16 = 4 * 3;
+    pub const JACK_SHIFT: u16 = 4 * 2;
+    pub const TREE_SHIFT: u16 = 4 * 0;
 
     pub const SAPLING_SPAWN_CHANCE: u32 = 0;
     pub const MATURE_SPAWN_CHANCE: u32 = 10;
@@ -26,10 +26,16 @@ pub mod consts {
     pub const MATURE_HARVEST_CHANCE: u32 = 75;
     pub const ELDER_HARVEST_CHANCE: u32 = 66;
 
-    pub const JACK_MAX_LEVEL: u32 = 5;
+    pub const SAPLING_HARVEST_AMOUNT: u32 = 1;
+    pub const MATURE_HARVEST_AMOUNT: u32 = 2;
+    pub const ELDER_HARVEST_AMOUNT: u32 = 4;
+    pub const NONE_HARVEST_AMOUNT: u32 = 0;
 
-    pub const SAPLING_GROW_AGE: u32 = 12;
-    pub const MATURE_GROW_AGE: u32 = 120;
+    pub const JACK_MAX_LEVEL: u16 = 5;
+    pub const JACK_MIN_MAUL_PROTECTION: u16 = 75;
+
+    pub const SAPLING_GROW_AGE: u16 = 12;
+    pub const MATURE_GROW_AGE: u16 = 120;
 
     pub const BEAR_WANDERS_PER_MONTH: u32 = 3;
     pub const BEAR_WANDER_ATTEMPTS: u32 = 2;
@@ -47,7 +53,7 @@ pub mod forest {
         JACK_SHIFT, JACK_WANDERS_PER_MONTH, JACK_WANDER_ATTEMPTS, MATURE_GROW_AGE,
         MATURE_HARVEST_CHANCE, MATURE_SPAWN_CHANCE, NONE_MASK, SAPLING_GROW_AGE,
         SAPLING_HARVEST_CHANCE, SAPLING_SPAWN_CHANCE, STARTING_BEARS, STARTING_JACKS,
-        STARTING_TREES, TREE_MASK, TREE_REMOVE_MASK, TREE_SHIFT,
+        STARTING_TREES, TREE_MASK, TREE_REMOVE_MASK, TREE_SHIFT, SAPLING_HARVEST_AMOUNT, MATURE_HARVEST_AMOUNT, ELDER_HARVEST_AMOUNT, NONE_HARVEST_AMOUNT, JACK_MIN_MAUL_PROTECTION,
     };
 
     enum TreeKind {
@@ -59,7 +65,7 @@ pub mod forest {
 
     pub struct Forest {
         rng: Random,
-        pub map: Vec<u32>,
+        pub map: Vec<u16>,
         width: usize,
         height: usize,
         pub months_elapsed: u32,
@@ -85,7 +91,7 @@ pub mod forest {
             }
         }
 
-        fn initialize_map(rng: &mut Random, map: &mut [u32]) {
+        fn initialize_map(rng: &mut Random, map: &mut [u16]) {
             let num_bears = f32::ceil(map.len() as f32 * STARTING_BEARS) as usize;
             for _ in 0..num_bears {
                 Self::randomly_place_entity(rng, map, BEAR_MASK, BEAR_SHIFT);
@@ -102,9 +108,10 @@ pub mod forest {
             }
         }
 
-        fn randomly_place_entity(rng: &mut Random, map: &mut [u32], mask: u32, shift: u32) {
-            let num_bears: u32 = map.iter().map(|cell| (cell & mask) >> shift).sum();
-
+        fn randomly_place_entity(rng: &mut Random, map: &mut [u16], mask: u16, shift: u16) {
+            let num_bears: u32 = map.iter()
+                .map(|cell| ((cell & mask) >> shift) as u32)
+                .sum();
             if num_bears as usize == map.len() {
                 return;
             }
@@ -120,7 +127,7 @@ pub mod forest {
             }
         }
 
-        fn place_entity(map: &mut [u32], index: usize, shift: u32) {
+        fn place_entity(map: &mut [u16], index: usize, shift: u16) {
             map[index] += 0x1 << shift;
         }
 
@@ -154,7 +161,7 @@ pub mod forest {
             println!();
         }
 
-        fn get_tree_kind(cell: u32) -> TreeKind {
+        fn get_tree_kind(cell: u16) -> TreeKind {
             match cell & TREE_MASK {
                 0 => TreeKind::None,
                 age => {
@@ -196,14 +203,14 @@ pub mod forest {
             }
         }
 
-        fn age_tree(map: &mut [u32], index: usize, cell: u32) {
+        fn age_tree(map: &mut [u16], index: usize, cell: u16) {
             let tree_age = cell & TREE_MASK;
             if tree_age < 255 {
                 map[index] += 0x1;
             }
         }
 
-        fn get_entity_positions(map: &[u32], mask: u32, shift: u32) -> Vec<usize> {
+        fn get_entity_positions(map: &[u16], mask: u16, shift: u16) -> Vec<usize> {
             (0..map.len())
                 .into_iter()
                 .filter(|&i| ((map[i] & mask) >> shift) > 0)
@@ -258,7 +265,7 @@ pub mod forest {
             y * width + x
         }
 
-        fn get_sapling_spawn_chance(cell: u32) -> u32 {
+        fn get_sapling_spawn_chance(cell: u16) -> u32 {
             let kind = Self::get_tree_kind(cell);
             match kind {
                 TreeKind::Sapling => SAPLING_SPAWN_CHANCE,
@@ -333,7 +340,7 @@ pub mod forest {
             }
         }
 
-        fn get_tree_harvest_chance(cell: u32) -> u32 {
+        fn get_tree_harvest_chance(cell: u16) -> u32 {
             match Self::get_tree_kind(cell) {
                 TreeKind::Sapling => SAPLING_HARVEST_CHANCE,
                 TreeKind::Mature => MATURE_HARVEST_CHANCE,
@@ -342,7 +349,7 @@ pub mod forest {
             }
         }
 
-        fn de_age_tree(map: &mut [u32], index: usize) {
+        fn de_age_tree(map: &mut [u16], index: usize) {
             let cell = map[index];
 
             match Self::get_tree_kind(cell) {
@@ -359,27 +366,27 @@ pub mod forest {
             }
         }
 
-        fn level_up_jack(map: &mut [u32], index: usize, lumber: u32) {
+        fn level_up_jack(map: &mut [u16], index: usize, lumber: u32) {
             let cell = map[index];
-            let level = (cell & JACK_MASK) >> JACK_SHIFT;
+            let current_level = (cell & JACK_MASK) >> JACK_SHIFT;
 
-            if level <= JACK_MAX_LEVEL {
-                let level = u32::min(level + lumber, JACK_MAX_LEVEL);
+            if current_level <= JACK_MAX_LEVEL {
+                let level = u16::min(current_level + lumber as u16, JACK_MAX_LEVEL);
                 map[index] &= JACK_REMOVE_MASK;
                 map[index] += level << JACK_SHIFT;
             }
         }
 
-        fn remove_entity(map: &mut [u32], index: usize, remove_mask: u32) {
+        fn remove_entity(map: &mut [u16], index: usize, remove_mask: u16) {
             map[index] &= remove_mask;
         }
 
-        fn get_harvest_amount(cell: u32) -> u32 {
+        fn get_harvest_amount(cell: u16) -> u32 {
             match Self::get_tree_kind(cell) {
-                TreeKind::Sapling => 0,
-                TreeKind::Mature => 1,
-                TreeKind::Elder => 2,
-                TreeKind::None => 0,
+                TreeKind::Sapling => SAPLING_HARVEST_AMOUNT,
+                TreeKind::Mature => MATURE_HARVEST_AMOUNT,
+                TreeKind::Elder => ELDER_HARVEST_AMOUNT,
+                TreeKind::None => NONE_HARVEST_AMOUNT,
             }
         }
 
@@ -443,12 +450,16 @@ pub mod forest {
             }
         }
 
-        fn get_jack_maul_chance(cell: u32) -> u32 {
+        fn get_jack_maul_chance(cell: u16) -> u32 {
             let level = (cell & JACK_MASK) >> JACK_SHIFT;
-            100 - (level * 10)
+            let base_maul_protection = level * 10;
+            let low_level_protection_bonus = 10 - u16::min(level.pow(2), 10);
+            let maul_protection = base_maul_protection + low_level_protection_bonus;
+            let maul_chance = 100 - u16::min(maul_protection, JACK_MIN_MAUL_PROTECTION);
+            maul_chance as u32
         }
 
-        fn de_level_jack(map: &mut [u32], index: usize) {
+        fn de_level_jack(map: &mut [u16], index: usize) {
             let cell = map[index];
             let level = cell & JACK_MASK;
 
@@ -463,9 +474,9 @@ pub mod forest {
                 let jacks = Self::get_entity_positions(&self.map, JACK_MASK, JACK_SHIFT);
                 if self.yearly_lumber as usize > jacks.len() {
                     let excess_lumber = self.yearly_lumber as usize - jacks.len();
-                    let new_lumberjacks = excess_lumber / 10;
+                    let new_jacks = excess_lumber / 10;
 
-                    for _ in 0..new_lumberjacks {
+                    for _ in 0..new_jacks {
                         if let Some(index) = Self::get_open_space(&mut self.rng, &mut self.map) {
                             Self::place_entity(&mut self.map, index, JACK_SHIFT);
                         }
@@ -498,7 +509,7 @@ pub mod forest {
             self.yearly_mauls = 0;
         }
 
-        fn get_open_space(rng: &mut Random, map: &[u32]) -> Option<usize> {
+        fn get_open_space(rng: &mut Random, map: &[u16]) -> Option<usize> {
             let mut spaces: Vec<usize> = vec![];
             for i in 0..map.len() {
                 let cell = map[i];
