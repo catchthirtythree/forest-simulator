@@ -22,7 +22,7 @@ impl Default for AppState {
 }
 
 #[tauri::command]
-fn get_forest(state: tauri::State<AppState>) -> Vec<u32> {
+fn get_forest(state: tauri::State<AppState>) -> Vec<u16> {
     state.forest.lock().unwrap().map.clone()
 }
 
