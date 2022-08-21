@@ -6,17 +6,17 @@ pub mod consts {
     pub const STARTING_BEARS: f32 = 0.02;
 
     pub const NONE_MASK: u16 = 0x0000;
-    pub const BEAR_MASK: u16 = 0xF000;
-    pub const JACK_MASK: u16 = 0x0F00;
     pub const TREE_MASK: u16 = 0x00FF;
+    pub const JACK_MASK: u16 = 0x0F00;
+    pub const BEAR_MASK: u16 = 0xF000;
 
-    pub const BEAR_REMOVE_MASK: u16 = 0x0FFF;
-    pub const JACK_REMOVE_MASK: u16 = 0xF0FF;
     pub const TREE_REMOVE_MASK: u16 = 0xFF00;
+    pub const JACK_REMOVE_MASK: u16 = 0xF0FF;
+    pub const BEAR_REMOVE_MASK: u16 = 0x0FFF;
 
-    pub const BEAR_SHIFT: u16 = 4 * 3;
-    pub const JACK_SHIFT: u16 = 4 * 2;
     pub const TREE_SHIFT: u16 = 4 * 0;
+    pub const JACK_SHIFT: u16 = 4 * 2;
+    pub const BEAR_SHIFT: u16 = 4 * 3;
 
     pub const SAPLING_SPAWN_CHANCE: u32 = 0;
     pub const MATURE_SPAWN_CHANCE: u32 = 10;
@@ -26,10 +26,10 @@ pub mod consts {
     pub const MATURE_HARVEST_CHANCE: u32 = 75;
     pub const ELDER_HARVEST_CHANCE: u32 = 66;
 
+    pub const NONE_HARVEST_AMOUNT: u32 = 0;
     pub const SAPLING_HARVEST_AMOUNT: u32 = 1;
     pub const MATURE_HARVEST_AMOUNT: u32 = 2;
     pub const ELDER_HARVEST_AMOUNT: u32 = 4;
-    pub const NONE_HARVEST_AMOUNT: u32 = 0;
 
     pub const JACK_MAX_LEVEL: u16 = 5;
     pub const JACK_MIN_MAUL_PROTECTION: u16 = 75;
@@ -93,26 +93,23 @@ pub mod forest {
 
         fn initialize_map(rng: &mut Random, map: &mut [u16]) {
             let num_bears = f32::ceil(map.len() as f32 * STARTING_BEARS) as usize;
-            for _ in 0..num_bears {
-                Self::randomly_place_entity(rng, map, BEAR_MASK, BEAR_SHIFT);
+            for n in 0..num_bears {
+                Self::randomly_place_entity(rng, map, n, BEAR_MASK, BEAR_SHIFT);
             }
 
             let num_jacks = f32::ceil(map.len() as f32 * STARTING_JACKS) as usize;
-            for _ in 0..num_jacks {
-                Self::randomly_place_entity(rng, map, JACK_MASK, JACK_SHIFT);
+            for n in 0..num_jacks {
+                Self::randomly_place_entity(rng, map, n, JACK_MASK, JACK_SHIFT);
             }
 
             let num_trees = f32::ceil(map.len() as f32 * STARTING_TREES) as usize;
-            for _ in 0..num_trees {
-                Self::randomly_place_entity(rng, map, TREE_MASK, TREE_SHIFT);
+            for n in 0..num_trees {
+                Self::randomly_place_entity(rng, map, n, TREE_MASK, TREE_SHIFT);
             }
         }
 
-        fn randomly_place_entity(rng: &mut Random, map: &mut [u16], mask: u16, shift: u16) {
-            let num_bears: u32 = map.iter()
-                .map(|cell| ((cell & mask) >> shift) as u32)
-                .sum();
-            if num_bears as usize == map.len() {
+        fn randomly_place_entity(rng: &mut Random, map: &mut [u16], num_ents: usize, mask: u16, shift: u16) {
+            if num_ents == map.len() {
                 return;
             }
 
@@ -383,10 +380,10 @@ pub mod forest {
 
         fn get_harvest_amount(cell: u16) -> u32 {
             match Self::get_tree_kind(cell) {
+                TreeKind::None => NONE_HARVEST_AMOUNT,
                 TreeKind::Sapling => SAPLING_HARVEST_AMOUNT,
                 TreeKind::Mature => MATURE_HARVEST_AMOUNT,
                 TreeKind::Elder => ELDER_HARVEST_AMOUNT,
-                TreeKind::None => NONE_HARVEST_AMOUNT,
             }
         }
 
