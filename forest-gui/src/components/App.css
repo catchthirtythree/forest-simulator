@@ -10,12 +10,12 @@ div#App_container div#App_canvas {
   justify-content: center;
   align-items: center;
 
-  flex: 1;
+  height: 100%;
+  width: 100%;
 }
 
 div#App_container div#App_canvas canvas {
   height: 100%;
-  width: 100%;
 }
 
 div#App_container div#App_buttons {
