@@ -66,11 +66,11 @@ pub mod forest {
     pub struct Forest {
         rng: Random,
         pub map: Vec<u16>,
-        width: usize,
-        height: usize,
+        pub width: usize,
+        pub height: usize,
         pub months_elapsed: u32,
-        yearly_lumber: u32,
-        yearly_mauls: u32,
+        pub yearly_lumber: u32,
+        pub yearly_mauls: u32,
     }
 
     impl Forest {
