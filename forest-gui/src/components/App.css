@@ -11,7 +11,7 @@ div#App_container div#App_canvas {
   align-items: center;
 
   height: 100%;
-  width: calc(100% - 120px);
+  width: 100%;
 }
 
 div#App_container div#App_information {
@@ -97,7 +97,7 @@ div#App_container div#App_information div#App_settings button {
   cursor: pointer;
   height: 28px;
   outline: 0;
-  width: 12;
+  width: 100%;
 }
 
 div#App_container div#App_information div#App_settings button:hover {
