@@ -1,3 +1,4 @@
+import { info } from 'console';
 import { ReactElement, useEffect, useState } from 'react';
 import { create_forest, get_forest, update_forest } from '../commands/forest_commands';
 import { IForestInfo } from '../types/response';
@@ -7,6 +8,42 @@ import Map from './Map';
 const DEFAULT_SEED: number = 123123;
 const DEFAULT_WIDTH: number = 120;
 const DEFAULT_HEIGHT: number = 80;
+
+export function get_bear_amount(forestInfo: IForestInfo): number {
+  return forestInfo.map.reduce((acc, cell) => {
+    if ((cell & 0xf000) > 0) {
+      return acc + 1;
+    }
+
+    return acc;
+  }, 0);
+}
+
+export function get_jack_amount(forestInfo: IForestInfo): number {
+  return forestInfo.map.reduce((acc, cell) => {
+    if ((cell & 0x0f00) > 0) {
+      return acc + 1;
+    }
+
+    return acc;
+  }, 0);
+}
+
+export function get_tree_amount(forestInfo: IForestInfo): number {
+  return forestInfo.map.reduce((acc, cell) => {
+    if ((cell & 0x00ff) > 0) {
+      return acc + 1;
+    }
+
+    return acc;
+  }, 0);
+}
+
+export function show_formatted_date(forestInfo: IForestInfo): string {
+  const years = Math.floor(forestInfo.months_elapsed / 12);
+  const months = Math.floor(forestInfo.months_elapsed % 12);
+  return `Year ${years}, Month ${months}`;
+}
 
 export default function App(props: {}): ReactElement<any, any> {
   const [timer, setTimer] = useState<NodeJS.Timer | null>(null);
@@ -75,6 +112,8 @@ export default function App(props: {}): ReactElement<any, any> {
 
       <div id="App_information">
         <div id="App_settings">
+          <div id="settings-header">Simulation Settings</div>
+
           <div className="settings-field">
             <span>Seed:</span>
             <input type="number" value={seedInput}
@@ -103,7 +142,40 @@ export default function App(props: {}): ReactElement<any, any> {
           <button onClick={handleUpdateSettings}>Update Settings</button>
         </div>
 
-        {/* @TODO(michael): Show forest information: months elapsed, number of bears/jacks/trees. */}
+        <hr />
+
+        <div id="App_statistics">
+          <div id="stats-header">Simulation Statistics</div>
+
+          <div>{show_formatted_date(forestInfo)}</div>
+
+          <div className="stats-field">
+            <div>Bears:</div>
+            <div>{get_bear_amount(forestInfo)}</div>
+          </div>
+
+          <div className="stats-field">
+            <div>Jacks:</div>
+            <div>{get_jack_amount(forestInfo)}</div>
+          </div>
+
+          <div className="stats-field">
+            <div>Trees:</div>
+            <div>{get_tree_amount(forestInfo)}</div>
+          </div>
+
+          <div className="stats-field">
+            <div>Yearly Lumber:</div>
+            <div>{forestInfo.yearly_lumber}</div>
+          </div>
+
+          <div className="stats-field">
+            <div>Yearly Mauls:</div>
+            <div>{forestInfo.yearly_mauls}</div>
+          </div>
+        </div>
+
+        <hr />
 
         <div id="App_buttons">
           <button onClick={handleRunSimulation}>

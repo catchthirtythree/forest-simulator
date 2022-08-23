@@ -17,29 +17,69 @@ div#App_container div#App_canvas {
 div#App_container div#App_information {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 
+  background-color: #002f41;
+  border-left: 2px solid black;
+  box-sizing: border-box;
   height: 100%;
-  width: 200px;
+  padding: 8px;
+  width: 250px;
 }
 
-div#App_container div#App_information > *:not(:last-child) {
+div#App_container div#App_information hr {
+  border-style: dashed;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  border-width: 2px;
+  width: 100%;
+}
+
+div#App_container div#App_information>*:not(:last-child) {
   margin-bottom: 15px;
+}
+
+div#App_container div#App_information div#App_statistics {
+  display: flex;
+  flex-direction: column;
+
+  color: #ffffff;
+}
+
+div#App_container div#App_information div#App_statistics>*:not(:last-child) {
+  margin-bottom: 5px;
+}
+
+div#App_container div#App_information div#App_statistics div#stats-header {
+  font-weight: bold;
+}
+
+div#App_container div#App_information div#App_statistics div.stats-field {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 div#App_container div#App_information div#App_settings {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
 
   color: #ffffff;
-  padding-left: 8px;
-  padding-right: 8px;
+}
+
+div#App_container div#App_information div#App_settings>*:not(:last-child) {
+  margin-bottom: 5px;
+}
+
+div#App_container div#App_information div#App_settings div#settings-header {
+  font-weight: bold;
 }
 
 div#App_container div#App_information div#App_settings div.settings-field {
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
 }
 
 div#App_container div#App_information div#App_settings div.settings-field span {
@@ -57,7 +97,7 @@ div#App_container div#App_information div#App_settings button {
   cursor: pointer;
   height: 28px;
   outline: 0;
-  width: 128px;
+  width: 12;
 }
 
 div#App_container div#App_information div#App_settings button:hover {
