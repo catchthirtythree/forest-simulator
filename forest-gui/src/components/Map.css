@@ -13,10 +13,10 @@ div#Map_container canvas {
 div#Map_container div#popup {
   position: absolute;
   top: 5px;
-  left: 5px;
+  right: 5px;
 
   background-color: #000000a0;
-  border: 1px solid #000000;
+  border: 1px solid #ffffff50;
   border-radius: 5px;
   box-sizing: border-box;
   font-family: 'Courier New', Courier, monospace;
@@ -24,6 +24,16 @@ div#Map_container div#popup {
   padding: 8px;
   user-select: none;
   width: 150px;
+}
+
+div#Map_container div#popup div#close-button {
+  position: absolute;
+  top: -2px;
+  right: 2px;
+
+  cursor: pointer;
+  color: #ffffff;
+  font-size: 20px;
 }
 
 div#Map_container div#popup div.info-row {

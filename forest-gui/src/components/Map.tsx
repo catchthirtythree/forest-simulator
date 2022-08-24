@@ -168,10 +168,8 @@ export default function Map(props: {
   }
 
   useEffect(() => {
-    console.log('selected', selected);
+    setSelected(null);
 
-    // @TODO(michael): If selected is not null, update the cell.
-    // @TODO(michael): If width / height changes, set selected to null.
     if (!canvasRef.current) return;
 
     let canvas = canvasRef.current;
@@ -204,23 +202,23 @@ export default function Map(props: {
         height={height}
       />
 
-      {/* @TODO(michael): Show popup when the user clicks on the canvas. */}
-      {/* @TODO(michael): Place the popup properly. */}
       <div id="popup" hidden={selected === null ? true : false}>
+          <div id="close-button" onClick={(event) => {
+            setSelected(null);
+          }}>×</div>
 
-        <div className="info-row">
-          <span>Tree: {show_tree_info(selected?.cell ?? 0)}</span>
-        </div>
+          <div className="info-row">
+            <span>Tree: {show_tree_info(selected?.cell ?? 0)}</span>
+          </div>
 
-        <div className="info-row">
-          <span>Jack: {show_jack_info(selected?.cell ?? 0)}</span>
-        </div>
+          <div className="info-row">
+            <span>Jack: {show_jack_info(selected?.cell ?? 0)}</span>
+          </div>
 
-        <div className="info-row">
-          <span>Bear: {show_bear_info(selected?.cell ?? 0)}</span>
-          <span></span>
-        </div>
-
+          <div className="info-row">
+            <span>Bear: {show_bear_info(selected?.cell ?? 0)}</span>
+            <span></span>
+          </div>
       </div>
     </div>
   );
