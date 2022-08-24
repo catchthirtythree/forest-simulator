@@ -8,6 +8,7 @@ import Map from './Map';
 const DEFAULT_SEED: number = 123123;
 const DEFAULT_WIDTH: number = 120;
 const DEFAULT_HEIGHT: number = 80;
+const DEFAULT_CELL_DRAW_SIZE: number = 8;
 
 export function get_bear_amount(forestInfo: IForestInfo): number {
   return forestInfo.map.reduce((acc, cell) => {
@@ -61,6 +62,7 @@ export default function App(props: {}): ReactElement<any, any> {
   const [seedInput, setSeedInput] = useState<string>(DEFAULT_SEED.toString());
   const [widthInput, setWidthInput] = useState<string>(DEFAULT_WIDTH.toString());
   const [heightInput, setHeightInput] = useState<string>(DEFAULT_HEIGHT.toString());
+  const [cellInput, setCellInput] = useState<string>(DEFAULT_CELL_DRAW_SIZE.toString());
 
   const getForest = () => {
     get_forest().then(info => setForestInfo(info));
@@ -92,10 +94,6 @@ export default function App(props: {}): ReactElement<any, any> {
     }
   }
 
-  const handleRedrawMap = (event: any): void => {
-    getForest();
-  }
-
   const handleUpdateMap = (event: any): void => {
     update_forest().then(_ => getForest());
   }
@@ -107,7 +105,7 @@ export default function App(props: {}): ReactElement<any, any> {
   return (
     <div id="App_container">
       <div id="App_canvas">
-        <Map info={forestInfo} />
+        <Map info={forestInfo} cellSize={Number(cellInput)} />
       </div>
 
       <div id="App_information">
@@ -137,6 +135,15 @@ export default function App(props: {}): ReactElement<any, any> {
               onChange={(event) => {
                 setHeightInput(event.target.value);
               }} />
+          </div>
+
+          <div className="settings-field">
+            <span>Cell Size:</span>
+            <input type="range" min="1" max="64" value={cellInput}
+              onChange={(event) => {
+                setCellInput(event.target.value);
+              }}
+            />
           </div>
 
           <button onClick={handleUpdateSettings}>Update Settings</button>

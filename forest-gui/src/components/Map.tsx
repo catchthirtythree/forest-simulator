@@ -2,8 +2,6 @@ import { ReactElement, useEffect, useRef, useState } from "react";
 import { IForestInfo } from "../types/response";
 import './Map.css';
 
-const DEFAULT_CELL_DRAW_SIZE: number = 8;
-
 export interface ISelectedCell {
   cell: number;
   x: number;
@@ -128,11 +126,12 @@ export interface IPosition {
 
 export default function Map(props: {
   info: IForestInfo,
+  cellSize: number,
 }): ReactElement<any, any> {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const width = props.info.width * DEFAULT_CELL_DRAW_SIZE;
-  const height = props.info.height * DEFAULT_CELL_DRAW_SIZE;
+  const width = props.info.width * props.cellSize;
+  const height = props.info.height * props.cellSize;
 
   const [selected, setSelected] = useState<ISelectedCell | null>(null);
 
@@ -150,8 +149,8 @@ export default function Map(props: {
     ];
 
     const [xRatio, yRatio] = [
-      offsetX / rect.width / DEFAULT_CELL_DRAW_SIZE,
-      offsetY / rect.height / DEFAULT_CELL_DRAW_SIZE,
+      offsetX / rect.width / props.cellSize,
+      offsetY / rect.height / props.cellSize,
     ];
 
     const [canvasX, canvasY] = [
@@ -186,7 +185,7 @@ export default function Map(props: {
     context.clearRect(0, 0, width, height);
 
     props.info.map.forEach((cell, index) => {
-      draw_pixel(image_data, cell, index, width, DEFAULT_CELL_DRAW_SIZE);
+      draw_pixel(image_data, cell, index, width, props.cellSize);
     });
 
     context.putImageData(image_data, 0, 0);

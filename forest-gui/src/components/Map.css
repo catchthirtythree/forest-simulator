@@ -1,5 +1,13 @@
 div#Map_container {
   position: relative;
+
+  height: 100%;
+  width: 100%;
+}
+
+div#Map_container canvas {
+  height: 100%;
+  width: 100%;
 }
 
 div#Map_container div#popup {

@@ -17,12 +17,12 @@ div#App_container div#App_canvas {
 div#App_container div#App_information {
   display: flex;
   flex-direction: column;
-  justify-content: center;
 
   background-color: #002f41;
   border-left: 2px solid black;
   box-sizing: border-box;
   height: 100%;
+  overflow: auto;
   padding: 8px;
   width: 250px;
 }
@@ -69,7 +69,7 @@ div#App_container div#App_information div#App_settings {
 }
 
 div#App_container div#App_information div#App_settings>*:not(:last-child) {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 div#App_container div#App_information div#App_settings div#settings-header {
@@ -82,11 +82,12 @@ div#App_container div#App_information div#App_settings div.settings-field {
   justify-content: space-between;
 }
 
-div#App_container div#App_information div#App_settings div.settings-field span {
+/* div#App_container div#App_information div#App_settings div.settings-field span {
   width: 55px;
-}
+} */
 
 div#App_container div#App_information div#App_settings div.settings-field input {
+  text-align: right;
   width: 100px;
 }
 
