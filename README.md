@@ -6,4 +6,4 @@ http://www.reddit.com/r/dailyprogrammer/comments/27h53e/662014_challenge_165_har
 
 ### Screenshot
 
-()[screenshots/screenshot-1.png]
+![](screenshots/screenshot-1.png)
